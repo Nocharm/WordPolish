@@ -1,0 +1,49 @@
+"""Outline / StyleSpec Pydantic 검증."""
+
+import pytest
+from pydantic import ValidationError
+
+from app.domain.outline import Block, Outline
+from app.domain.style_spec import StyleSpec
+
+
+def test_paragraph_block_valid():
+    b = Block(id="b-1", kind="paragraph", level=1, text="Intro", detected_by="word_style")
+    assert b.level == 1
+
+
+def test_paragraph_level_out_of_range():
+    with pytest.raises(ValidationError):
+        Block(id="b-1", kind="paragraph", level=4, text="x", detected_by="user")
+
+
+def test_table_block_requires_markdown():
+    b = Block(id="b-2", kind="table", level=0, markdown="| a |\n|---|\n| 1 |", caption="표 1", raw_ref="t-0")
+    assert b.markdown.startswith("|")
+
+
+def test_outline_minimal():
+    o = Outline(
+        job_id="j-1",
+        source_filename="r.docx",
+        blocks=[Block(id="b-1", kind="paragraph", level=0, text="hi", detected_by="word_style")],
+    )
+    assert len(o.blocks) == 1
+
+
+def test_style_spec_minimal():
+    spec = StyleSpec.model_validate({
+        "fonts": {
+            "body": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 11},
+            "heading": {
+                "h1": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 16, "bold": True},
+                "h2": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 14, "bold": True},
+                "h3": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 12, "bold": True},
+            },
+        },
+        "paragraph": {"line_spacing": 1.5, "alignment": "justify", "first_line_indent_pt": 0},
+        "numbering": {"h1": "1.", "h2": "1.1.", "h3": "1.1.1.", "list": "decimal"},
+        "table": {"border_color": "#000000", "border_width_pt": 0.5, "header_bg": "#D9D9D9", "header_bold": True, "cell_font_size_pt": 10},
+        "page": {"margin_top_mm": 25, "margin_bottom_mm": 25, "margin_left_mm": 25, "margin_right_mm": 25},
+    })
+    assert spec.fonts.body.korean == "맑은 고딕"
