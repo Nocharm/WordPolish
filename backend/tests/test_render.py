@@ -54,3 +54,23 @@ def test_render_applies_eastasia_font_for_korean():
     assert rFonts is not None
     assert rFonts.get(qn("w:eastAsia")) == "맑은 고딕"
     assert rFonts.get(qn("w:ascii")) == "Arial"
+
+
+def test_render_respects_block_alignment():
+    spec = _load_default_spec()
+    outline = Outline(
+        job_id="j-1",
+        source_filename="x.docx",
+        blocks=[
+            Block(id="b-1", kind="paragraph", level=0, text="가운데", detected_by="user", alignment="center"),
+            Block(id="b-2", kind="paragraph", level=0, text="기본", detected_by="user"),
+        ],
+    )
+    data = render_docx(outline, spec)
+    doc = Document(io.BytesIO(data))
+    # spec 의 alignment 는 'justify' 인데 b-1 은 'center' 로 override 되어야 함
+    p1 = doc.paragraphs[0]
+    p2 = doc.paragraphs[1]
+    # WD_ALIGN_PARAGRAPH.CENTER == 1, JUSTIFY == 3
+    assert int(p1.paragraph_format.alignment) == 1
+    assert int(p2.paragraph_format.alignment) == 3

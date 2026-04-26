@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 DetectedBy = Literal["word_style", "heuristic", "user"]
 BlockKind = Literal["paragraph", "table", "image", "field"]
 FieldKind = Literal["ref", "toc", "pageref"]
+Alignment = Literal["left", "right", "center", "justify"]
 
 
 class Block(BaseModel):
@@ -18,6 +19,7 @@ class Block(BaseModel):
     text: str | None = None
     detected_by: DetectedBy | None = None
     list_format: str | None = None
+    alignment: Alignment | None = None
 
     # table / image
     markdown: str | None = None

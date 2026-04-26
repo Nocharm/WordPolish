@@ -28,7 +28,7 @@ def _setup_page(doc, spec: StyleSpec) -> None:
 def _add_paragraph(doc, block: Block, spec: StyleSpec) -> None:
     if block.kind == "paragraph":
         para = doc.add_paragraph(block.text or "")
-        apply_paragraph_style(para, block.level, spec)
+        apply_paragraph_style(para, block.level, spec, alignment_override=block.alignment)
     else:
         text = _PLACEHOLDER.get(block.kind, "[unknown block]")
         if block.caption:

@@ -13,6 +13,29 @@ from docx.text.paragraph import Paragraph
 from app.domain.outline import Block, Outline
 from app.parser.detect_heading import detect_level
 
+_ALIGN_MAP = {0: "left", 1: "center", 2: "right", 3: "justify"}
+
+
+def _extract_alignment(paragraph: Paragraph) -> str | None:
+    pf = paragraph.paragraph_format
+    if pf is None or pf.alignment is None:
+        return None
+    code = int(pf.alignment)
+    return _ALIGN_MAP.get(code)
+
+
+def _collapse_consecutive_empty(blocks: list[Block]) -> list[Block]:
+    """연속 2개 이상의 빈 문단을 하나만 남김."""
+    out: list[Block] = []
+    prev_empty = False
+    for b in blocks:
+        is_empty = b.kind == "paragraph" and not (b.text or "").strip()
+        if is_empty and prev_empty:
+            continue
+        out.append(b)
+        prev_empty = is_empty
+    return out
+
 
 def _iter_top_level(doc: DocxDocument) -> Iterator[object]:
     """문서 본문 자식을 표시 순서대로 순회."""
@@ -44,6 +67,7 @@ def parse_docx(content: bytes, *, filename: str) -> Outline:
                     level=level,
                     text=item.text,
                     detected_by=detected_by,
+                    alignment=_extract_alignment(item),
                 )
             )
         elif isinstance(item, Table):
@@ -57,4 +81,5 @@ def parse_docx(content: bytes, *, filename: str) -> Outline:
             )
             table_idx += 1
 
+    blocks = _collapse_consecutive_empty(blocks)
     return Outline(job_id="", source_filename=filename, blocks=blocks)

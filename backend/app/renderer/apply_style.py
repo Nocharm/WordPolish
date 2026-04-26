@@ -27,7 +27,13 @@ def _set_paragraph_spacing(para: Paragraph, line_spacing: float) -> None:
     para.paragraph_format.line_spacing = line_spacing
 
 
-def apply_paragraph_style(para: Paragraph, level: int, spec: StyleSpec) -> None:
+def apply_paragraph_style(
+    para: Paragraph,
+    level: int,
+    spec: StyleSpec,
+    *,
+    alignment_override: str | None = None,
+) -> None:
     if level == 0:
         font = spec.fonts.body
     elif level == 1:
@@ -47,7 +53,8 @@ def apply_paragraph_style(para: Paragraph, level: int, spec: StyleSpec) -> None:
         "center": 1,
         "justify": 3,
     }
-    para.paragraph_format.alignment = align_map[spec.paragraph.alignment]
+    chosen = alignment_override if alignment_override is not None else spec.paragraph.alignment
+    para.paragraph_format.alignment = align_map[chosen]
 
     for run in para.runs:
         _set_run_fonts(run, font)

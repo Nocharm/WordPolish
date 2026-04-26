@@ -36,3 +36,20 @@ def test_parse_block_ids_are_unique():
     outline = parse_docx((FIXTURES / "sample_simple.docx").read_bytes(), filename="x.docx")
     ids = [b.id for b in outline.blocks]
     assert len(ids) == len(set(ids))
+
+
+def test_parse_collapses_consecutive_empty_paragraphs():
+    outline = parse_docx((FIXTURES / "sample_messy.docx").read_bytes(), filename="m.docx")
+    paras = [b for b in outline.blocks if b.kind == "paragraph"]
+    # consecutive empty 검사
+    for i in range(len(paras) - 1):
+        a_empty = not (paras[i].text or "").strip()
+        b_empty = not (paras[i + 1].text or "").strip()
+        assert not (a_empty and b_empty), f"consecutive empty at {i}"
+
+
+def test_parse_extracts_alignment_for_centered_cover():
+    outline = parse_docx((FIXTURES / "sample_messy.docx").read_bytes(), filename="m.docx")
+    # 첫 paragraph는 가운데정렬 표지여야 함
+    paras = [b for b in outline.blocks if b.kind == "paragraph"]
+    assert paras[0].alignment == "center"
