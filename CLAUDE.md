@@ -6,26 +6,29 @@
 
 ## Project
 
-<한 줄 프로젝트 설명 — 이 저장소가 무엇이고 누가 쓰는지>
+Word(.docx) 문서를 빌트인 템플릿(StyleSpec) 기준으로 표·문단·번호·폰트를 표준화해 다시 .docx로 출력하는 풀스택 웹 도구. 사용자 인증·히스토리·커스텀 템플릿 지원.
 
 ---
 
 ## Commands
 
 ```bash
-# Build
-<your build command here>
+# Backend (cd backend)
+uv pip install -r requirements-dev.txt        # deps
+pytest                                        # full suite
+pytest tests/test_parse.py::test_xxx -v       # single test
+ruff check . && ruff format .                 # lint + format
+uvicorn app.main:app --reload --port 8000     # dev server
 
-# Test
-<your test command here>              # full suite
-<your single test command here>       # single test
+# Frontend (cd frontend)
+npm install
+npm test
+npm run lint
+npm run dev                                   # http://localhost:3000
 
-# Lint / Format
-<your lint command here>
-<your format command here>
-
-# Dev server
-<your dev server command here>
+# Compose (전체 스택)
+cp .env.example .env && $EDITOR .env          # 시크릿 채우기
+docker compose -f infra/docker-compose.yml up -d
 ```
 
 ---
