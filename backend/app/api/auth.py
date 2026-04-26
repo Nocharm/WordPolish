@@ -1,7 +1,9 @@
 """인증 라우터 — signup, login, logout, me."""
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
-from pydantic import BaseModel, EmailStr
+import re
+
+from fastapi import APIRouter, Depends, HTTPException, Response
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -13,10 +15,21 @@ from app.settings import get_settings
 router = APIRouter(prefix="/auth", tags=["auth"])
 _settings = get_settings()
 
+# 임시 — OAuth 도입 전까지만 사용. RFC strict 검증 대신 "@ + 도메인" 만 확인.
+_LOOSE_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
 
 class Credentials(BaseModel):
-    email: EmailStr
-    password: str
+    email: str = Field(..., min_length=3, max_length=255)
+    password: str = Field(..., min_length=4, max_length=200)
+
+    @field_validator("email")
+    @classmethod
+    def _validate_email_loose(cls, v: str) -> str:
+        v = v.strip().lower()
+        if not _LOOSE_EMAIL.match(v):
+            raise ValueError("이메일 형식이 올바르지 않습니다 (예: name@example.com)")
+        return v
 
 
 class UserOut(BaseModel):

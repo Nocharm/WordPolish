@@ -59,12 +59,12 @@ export default function LoginPage() {
           {error ? <p className="text-sm text-danger">{error}</p> : null}
         </form>
 
-        <p className="mt-6 text-center text-sm text-text-muted">
-          계정이 없으신가요?{" "}
-          <Link href="/signup" className="font-medium text-primary hover:underline">
-            회원가입
+        <div className="mt-8 border-t border-border pt-4 text-center text-xs text-text-muted">
+          OAuth 로그인 추가 예정 ·{" "}
+          <Link href="/signup" className="text-text-muted underline hover:text-primary">
+            계정 만들기
           </Link>
-        </p>
+        </div>
       </div>
     </main>
   );

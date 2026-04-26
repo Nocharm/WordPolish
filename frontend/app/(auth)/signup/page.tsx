@@ -30,7 +30,9 @@ export default function SignupPage() {
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
       <div className="rounded-token-xl border border-border bg-surface-elevated p-8 shadow-token">
         <h1 className="text-2xl font-semibold tracking-tight">회원가입</h1>
-        <p className="mt-1 text-sm text-text-muted">새 계정을 만드세요.</p>
+        <p className="mt-1 text-sm text-text-muted">
+          OAuth 로그인 추가 전까지 임시로 사용합니다.
+        </p>
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
           <input
