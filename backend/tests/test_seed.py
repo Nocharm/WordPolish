@@ -23,17 +23,19 @@ def db_session():
     Base.metadata.drop_all(engine)
 
 
-def test_seed_inserts_builtin_report(db_session):
+def test_seed_inserts_three_builtins(db_session):
     seed_builtin_templates(db_session)
     rows = db_session.query(Template).filter_by(is_builtin=True).all()
-    assert len(rows) == 1
-    assert rows[0].name == "기본 보고서"
-    assert rows[0].owner_id is None
-    assert "fonts" in rows[0].spec
+    assert len(rows) == 3
+    names = {r.name for r in rows}
+    assert names == {"기본 보고서", "공문 양식", "학술 논문"}
+    # 모두 spec.fonts 가 있어야 함
+    for r in rows:
+        assert "fonts" in r.spec
 
 
 def test_seed_is_idempotent(db_session):
     seed_builtin_templates(db_session)
     seed_builtin_templates(db_session)
     rows = db_session.query(Template).filter_by(is_builtin=True).all()
-    assert len(rows) == 1
+    assert len(rows) == 3
