@@ -38,7 +38,7 @@ export interface FontDef {
 export interface StyleSpec {
   fonts: {
     body: FontDef;
-    heading: { h1: FontDef; h2: FontDef; h3: FontDef };
+    heading: { h1: FontDef; h2: FontDef; h3: FontDef; h4: FontDef; h5: FontDef };
   };
   paragraph: {
     line_spacing: number;
