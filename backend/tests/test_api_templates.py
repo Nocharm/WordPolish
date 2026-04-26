@@ -13,6 +13,8 @@ SAMPLE_SPEC = {
             "h1": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 16, "bold": True},
             "h2": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 14, "bold": True},
             "h3": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 12, "bold": True},
+            "h4": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 11, "bold": True},
+            "h5": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 10, "bold": True},
         },
     },
     "paragraph": {"line_spacing": 1.5, "alignment": "justify", "first_line_indent_pt": 0},

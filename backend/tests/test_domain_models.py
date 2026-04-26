@@ -14,7 +14,7 @@ def test_paragraph_block_valid():
 
 def test_paragraph_level_out_of_range():
     with pytest.raises(ValidationError):
-        Block(id="b-1", kind="paragraph", level=4, text="x", detected_by="user")
+        Block(id="b-1", kind="paragraph", level=6, text="x", detected_by="user")
 
 
 def test_table_block_requires_markdown():
@@ -39,6 +39,8 @@ def test_style_spec_minimal():
                 "h1": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 16, "bold": True},
                 "h2": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 14, "bold": True},
                 "h3": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 12, "bold": True},
+                "h4": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 11, "bold": True},
+                "h5": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 10, "bold": True},
             },
         },
         "paragraph": {"line_spacing": 1.5, "alignment": "justify", "first_line_indent_pt": 0},

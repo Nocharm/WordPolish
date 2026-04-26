@@ -12,11 +12,15 @@ _WORD_HEADING = {
     "Heading 1": 1, "제목 1": 1,
     "Heading 2": 2, "제목 2": 2,
     "Heading 3": 3, "제목 3": 3,
+    "Heading 4": 4, "제목 4": 4,
+    "Heading 5": 5, "제목 5": 5,
 }
 
 _RE_H1_DECIMAL = re.compile(r"^\d+\.\s")
 _RE_H2_DECIMAL = re.compile(r"^\d+\.\d+\.\s")
 _RE_H3_DECIMAL = re.compile(r"^\d+\.\d+\.\d+\.\s")
+_RE_H4_DECIMAL = re.compile(r"^\d+\.\d+\.\d+\.\d+\.\s")
+_RE_H5_DECIMAL = re.compile(r"^\d+\.\d+\.\d+\.\d+\.\d+\.\s")
 _RE_KOREAN_LETTER = re.compile(r"^[가-힣]\.\s")
 
 _RE_PAREN_NUM = re.compile(r"^\(\d+\)\s")           # (1) 텍스트
@@ -95,9 +99,13 @@ def detect_level(paragraph: Any, *, paragraph_index: int | None = None) -> tuple
     ):
         return 1, "heuristic"
 
-    # (b) 휴리스틱 — 가장 구체적인 패턴부터
+    # (b) 휴리스틱 — 가장 구체적인 패턴부터 (긴 패턴 우선)
     if _RE_STAR_WRAPPED.match(text):
         return 1, "heuristic"
+    if _RE_H5_DECIMAL.match(text):
+        return 5, "heuristic"
+    if _RE_H4_DECIMAL.match(text):
+        return 4, "heuristic"
     if _RE_H3_DECIMAL.match(text):
         return 3, "heuristic"
     if _RE_H2_DECIMAL.match(text):

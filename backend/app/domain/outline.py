@@ -13,7 +13,7 @@ Alignment = Literal["left", "right", "center", "justify"]
 class Block(BaseModel):
     id: str
     kind: BlockKind
-    level: int = Field(ge=0, le=3)
+    level: int = Field(ge=0, le=5)
 
     # paragraph
     text: str | None = None

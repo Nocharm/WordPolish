@@ -42,6 +42,10 @@ def apply_paragraph_style(
         font = spec.fonts.heading.h2
     elif level == 3:
         font = spec.fonts.heading.h3
+    elif level == 4:
+        font = spec.fonts.heading.h4
+    elif level == 5:
+        font = spec.fonts.heading.h5
     else:
         font = spec.fonts.body
 

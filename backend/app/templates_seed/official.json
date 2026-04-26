@@ -7,7 +7,9 @@
       "heading": {
         "h1": { "korean": "바탕", "ascii": "Times New Roman", "size_pt": 16, "bold": true },
         "h2": { "korean": "바탕", "ascii": "Times New Roman", "size_pt": 14, "bold": true },
-        "h3": { "korean": "바탕", "ascii": "Times New Roman", "size_pt": 12, "bold": true }
+        "h3": { "korean": "바탕", "ascii": "Times New Roman", "size_pt": 12, "bold": true },
+        "h4": { "korean": "바탕", "ascii": "Times New Roman", "size_pt": 11, "bold": true },
+        "h5": { "korean": "바탕", "ascii": "Times New Roman", "size_pt": 10, "bold": true }
       }
     },
     "paragraph": {

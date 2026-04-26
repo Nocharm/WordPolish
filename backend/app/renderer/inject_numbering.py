@@ -13,7 +13,7 @@ _RE_LEADING_NUMBER = re.compile(r"^\d+(\.\d+)*\.\s*")
 
 
 def renumber(blocks: list[Block], spec: StyleSpec) -> list[Block]:
-    counters = {1: 0, 2: 0, 3: 0}
+    counters = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
     out: list[Block] = []
     for b in blocks:
         if b.kind != "paragraph" or b.level == 0:
@@ -21,16 +21,20 @@ def renumber(blocks: list[Block], spec: StyleSpec) -> list[Block]:
             continue
         counters[b.level] += 1
         # 하위 카운터 리셋
-        for lvl in range(b.level + 1, 4):
+        for lvl in range(b.level + 1, 6):
             counters[lvl] = 0
 
-        # `1.` / `1.1.` / `1.1.1.` 자리에 카운터 채우기
+        # `1.` / `1.1.` / `1.1.1.` / `1.1.1.1.` / `1.1.1.1.1.` 자리에 카운터 채우기
         if b.level == 1:
             prefix = f"{counters[1]}."
         elif b.level == 2:
             prefix = f"{counters[1]}.{counters[2]}."
-        else:
+        elif b.level == 3:
             prefix = f"{counters[1]}.{counters[2]}.{counters[3]}."
+        elif b.level == 4:
+            prefix = f"{counters[1]}.{counters[2]}.{counters[3]}.{counters[4]}."
+        else:  # level == 5
+            prefix = f"{counters[1]}.{counters[2]}.{counters[3]}.{counters[4]}.{counters[5]}."
 
         original = b.text or ""
         cleaned = _RE_LEADING_NUMBER.sub("", original)

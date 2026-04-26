@@ -20,4 +20,7 @@ def seed_builtin_templates(db: Session) -> None:
         )
         if existing is None:
             db.add(Template(name=data["name"], is_builtin=True, spec=data["spec"]))
+        else:
+            # 빌트인은 시드 JSON을 단일 출처로 — 매 부팅 시 spec 갱신
+            existing.spec = data["spec"]
     db.commit()

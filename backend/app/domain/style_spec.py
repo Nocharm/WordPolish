@@ -16,6 +16,8 @@ class HeadingFonts(BaseModel):
     h1: FontDef
     h2: FontDef
     h3: FontDef
+    h4: FontDef
+    h5: FontDef
 
 
 class FontsBlock(BaseModel):

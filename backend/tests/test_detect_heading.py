@@ -101,6 +101,26 @@ def test_cover_detection_first_paragraph_centered_large_bold():
     assert detect_level(p, paragraph_index=0) == (1, "heuristic")
 
 
+def test_word_heading_4():
+    p = FakeParagraph(text="섹션", style=FakeStyle(name="Heading 4"))
+    assert detect_level(p) == (4, "word_style")
+
+
+def test_korean_heading_5():
+    p = FakeParagraph(text="섹션", style=FakeStyle(name="제목 5"))
+    assert detect_level(p) == (5, "word_style")
+
+
+def test_heuristic_h4_decimal():
+    p = FakeParagraph(text="1.1.1.1. 항목")
+    assert detect_level(p) == (4, "heuristic")
+
+
+def test_heuristic_h5_decimal():
+    p = FakeParagraph(text="1.1.1.1.1. 항목")
+    assert detect_level(p) == (5, "heuristic")
+
+
 def test_cover_detection_misses_after_5_paragraphs():
     from dataclasses import dataclass, field
 
