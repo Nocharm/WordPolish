@@ -591,3 +591,20 @@ docker compose -f infra/docker-compose.yml up -d
   - 상대 참조 (TOC/REF/PAGEREF) 미지원 (Phase 4)
   - 다중 파일 병합 미지원 (Phase 5)
   - StyleSpec 폼은 부분 필드만 (번호 형식·표 스타일은 빌트인 값 그대로) — 향후 확장
+
+---
+
+## Phase 2.3 완료 검증 — 2026-04-26
+
+사용자 요청 추가 기능 묶음:
+
+- **H4 / H5 헤딩 지원** — Block.level 0..5, StyleSpec heading.h4/h5 추가, 빌트인 3종 모두 h4/h5 폰트 시드 확장 (`기본 보고서` 11/10pt, `공문 양식` 11/10pt 바탕, `학술 논문` 11/10pt Cambria) ✅
+  - 빌트인 spec은 매 부팅 시 JSON에서 재시드 (idempotent overwrite, 커스텀 미터치)
+  - 파서: `Heading 4/5`, `제목 4/5`, `\d+\.\d+\.\d+\.\d+\.` (H4 휴리스틱), `\d+\.\d+\.\d+\.\d+\.\d+\.` (H5)
+- **outline 본문 추가/삭제** — 각 블록 hover 시 "+ 본문 추가" 버튼, ✕ 단일 삭제, 더블클릭 인라인 텍스트 편집 (Enter/blur 저장, Esc 취소) ✅
+- **outline 다중 일괄 삭제** — 선택된 N개에 대해 `Delete`/`Backspace` + 확인 다이얼로그로 한 번에 제거 ✅
+- **히스토리 일괄 삭제** — 체크박스 + 전체선택(indeterminate) + "선택 삭제 (N)" 버튼, `Promise.all` 병렬 DELETE ✅
+- **템플릿 일괄 삭제** — 커스텀만 체크박스 노출 (빌트인은 보호), 동일 패턴 ✅
+- 검증 결과:
+  - 백엔드 테스트 65/65 PASS (4 신규 H4/H5 테스트)
+  - 통합 라운드트립: 빌트인 3개에 h4/h5 자동 반영 (h4/h5: true), level=4 PUT 정상 (200), 새 블록 삽입 PUT 정상, render 200, docx 36KB, 일괄 삭제 (3 → 1) 정상 동작
