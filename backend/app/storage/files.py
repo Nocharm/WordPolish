@@ -22,3 +22,21 @@ def source_path(user_id: uuid.UUID, job_id: uuid.UUID, original_filename: str) -
 
 def result_path(user_id: uuid.UUID, job_id: uuid.UUID) -> Path:
     return job_dir(user_id, job_id) / "result.docx"
+
+
+def raw_ooxml_path(user_id: uuid.UUID, job_id: uuid.UUID, raw_ref: str) -> Path:
+    """raw_ref 예: 'table-0'. 원본 <w:tbl>/기타 OOXML 조각을 .xml 로 저장."""
+    d = job_dir(user_id, job_id) / "raw"
+    d.mkdir(parents=True, exist_ok=True)
+    return d / f"{raw_ref}.xml"
+
+
+def image_dir(job_id: uuid.UUID) -> Path:
+    d = _data_dir() / "images" / str(job_id)
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def image_path(job_id: uuid.UUID, idx: int, ext: str) -> Path:
+    safe_ext = ext.lstrip(".").lower() or "bin"
+    return image_dir(job_id) / f"image-{idx}.{safe_ext}"
