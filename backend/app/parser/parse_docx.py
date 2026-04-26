@@ -32,9 +32,11 @@ def parse_docx(content: bytes, *, filename: str) -> Outline:
     doc = Document(io.BytesIO(content))
     blocks: list[Block] = []
     table_idx = 0
+    para_idx = 0
     for item in _iter_top_level(doc):
         if isinstance(item, Paragraph):
-            level, detected_by = detect_level(item)
+            level, detected_by = detect_level(item, paragraph_index=para_idx)
+            para_idx += 1
             blocks.append(
                 Block(
                     id=_new_id(),

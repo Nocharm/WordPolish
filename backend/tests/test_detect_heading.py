@@ -51,3 +51,70 @@ def test_heuristic_korean_h2():
 def test_fallback_body():
     p = FakeParagraph(text="본문 내용입니다.")
     assert detect_level(p) == (0, "heuristic")
+
+
+def test_paren_number_h2():
+    p = FakeParagraph(text="(1) 첫 번째 항목")
+    assert detect_level(p) == (2, "heuristic")
+
+
+def test_closing_paren_number_h2():
+    p = FakeParagraph(text="1) 첫 번째 항목")
+    assert detect_level(p) == (2, "heuristic")
+
+
+def test_circled_number_h3():
+    p = FakeParagraph(text="① 첫 번째 항목")
+    assert detect_level(p) == (3, "heuristic")
+
+
+def test_star_wrapped_h1():
+    p = FakeParagraph(text="*** 결론 ***")
+    assert detect_level(p) == (1, "heuristic")
+
+
+def test_bare_number_with_bold_h1():
+    p = FakeParagraph(text="3 향후 개선", runs=[FakeRun(bold=True)])
+    assert detect_level(p) == (1, "heuristic")
+
+
+def test_bare_number_without_bold_stays_body():
+    p = FakeParagraph(text="3 향후 개선")
+    assert detect_level(p) == (0, "heuristic")
+
+
+def test_cover_detection_first_paragraph_centered_large_bold():
+    from dataclasses import dataclass, field
+
+    @dataclass
+    class FakePF:
+        alignment: int = 1  # CENTER
+
+    @dataclass
+    class FakePCover:
+        text: str = "2026 사내 워크숍 결과 보고서"
+        style: FakeStyle = field(default_factory=FakeStyle)
+        runs: list[FakeRun] = field(default_factory=list)
+        paragraph_format: FakePF = field(default_factory=FakePF)
+
+    p = FakePCover(runs=[FakeRun(bold=True, font_size_pt=22)])
+    assert detect_level(p, paragraph_index=0) == (1, "heuristic")
+
+
+def test_cover_detection_misses_after_5_paragraphs():
+    from dataclasses import dataclass, field
+
+    @dataclass
+    class FakePF:
+        alignment: int = 1
+
+    @dataclass
+    class FakePCover:
+        text: str = "Late centered title"
+        style: FakeStyle = field(default_factory=FakeStyle)
+        runs: list[FakeRun] = field(default_factory=list)
+        paragraph_format: FakePF = field(default_factory=FakePF)
+
+    p = FakePCover(runs=[FakeRun(bold=True, font_size_pt=22)])
+    # paragraph 6 -> outside cover window
+    assert detect_level(p, paragraph_index=6) == (0, "heuristic")
