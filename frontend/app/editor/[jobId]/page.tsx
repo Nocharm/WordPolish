@@ -50,36 +50,59 @@ export default function EditorPage() {
     }
   }
 
-  if (error) return <main className="p-8 text-red-600">{error}</main>;
-  if (!outline) return <main className="p-8">로딩 중...</main>;
+  if (error) {
+    return (
+      <main className="mx-auto max-w-4xl p-6">
+        <div className="rounded-token-lg bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div>
+      </main>
+    );
+  }
+  if (!outline) {
+    return <main className="mx-auto max-w-4xl p-6 text-text-muted">로딩 중...</main>;
+  }
 
   return (
     <main className="mx-auto max-w-4xl p-6">
-      <h1 className="text-xl font-bold">{outline.source_filename}</h1>
-      <p className="mt-1 text-xs text-gray-500">
-        Tab/Shift+Tab으로 문단 레벨을 조정하세요. ⚠️ 표시는 휴리스틱 추정 결과입니다.
-      </p>
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{outline.source_filename}</h1>
+          <p className="mt-1 text-sm text-text-muted">
+            <kbd className="rounded bg-surface px-1.5 py-0.5 text-xs">Tab</kbd>
+            <span className="mx-1">/</span>
+            <kbd className="rounded bg-surface px-1.5 py-0.5 text-xs">Shift+Tab</kbd>
+            으로 문단 레벨 조정 · ⚠️는 휴리스틱 추정
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => router.push("/dashboard")}
+          className="rounded-token border border-border bg-surface-elevated px-4 py-2 text-sm hover:bg-surface"
+        >
+          히스토리
+        </button>
+      </header>
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-6 flex flex-wrap items-center gap-3 rounded-token-lg border border-border bg-surface-elevated p-4 shadow-token-sm">
+        <label className="text-sm text-text-muted">템플릿</label>
         <select
-          className="rounded border px-3 py-2"
+          className="flex-1 rounded-token border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
           value={selectedTpl}
           onChange={(e) => setSelectedTpl(e.target.value)}
         >
           {templates.map((t) => (
-            <option key={t.id} value={t.id}>{t.name}{t.is_builtin ? " (빌트인)" : ""}</option>
+            <option key={t.id} value={t.id}>
+              {t.name}
+              {t.is_builtin ? " · 빌트인" : ""}
+            </option>
           ))}
         </select>
         <button
           type="button"
           onClick={handleRender}
           disabled={busy || !selectedTpl}
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+          className="rounded-token bg-primary px-5 py-2 text-sm font-medium text-white transition hover:bg-primary-hover disabled:opacity-50"
         >
           {busy ? "변환 중..." : "변환 + 다운로드"}
-        </button>
-        <button type="button" onClick={() => router.push("/dashboard")} className="rounded border px-4 py-2">
-          히스토리
         </button>
       </div>
 

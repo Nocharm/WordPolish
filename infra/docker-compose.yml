@@ -35,6 +35,9 @@ services:
     build:
       context: ../frontend
     env_file: ../.env
+    environment:
+      # 서버 컴포넌트가 같은 컴포즈 네트워크 안에서 backend로 직접 fetch
+      INTERNAL_API_BASE: http://backend:8000
     depends_on:
       - backend
     restart: unless-stopped

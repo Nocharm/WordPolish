@@ -27,7 +27,7 @@ export function OutlineEditor({ initial, onChange }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-1 rounded border bg-white p-4">
+    <div className="flex flex-col gap-1 rounded-token-lg border border-border bg-surface-elevated p-6 shadow-token-sm">
       {outline.blocks.map((b) => {
         if (b.kind === "paragraph") return <ParagraphBlock key={b.id} block={b} onChangeLevel={updateLevel} />;
         if (b.kind === "table") return <TableBlock key={b.id} block={b} />;

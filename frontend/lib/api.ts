@@ -1,4 +1,5 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+// 빈값/미설정 시 동일 origin의 /api 로 — nginx 프록시 거치므로 CORS·포트 노출 불필요
+const BASE = process.env.NEXT_PUBLIC_API_BASE || "/api";
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const isFormData = init.body instanceof FormData;
