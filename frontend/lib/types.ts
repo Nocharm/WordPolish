@@ -83,6 +83,22 @@ export interface BatchRenderItem {
   error?: string | null;
 }
 
+export type FeedbackCategory = "bug" | "feature" | "other";
+export type FeedbackStatus = "open" | "in_progress" | "closed";
+
+export interface Feedback {
+  id: string;
+  user_id: string;
+  user_email?: string | null;
+  category: FeedbackCategory;
+  title: string;
+  body: string;
+  status: FeedbackStatus;
+  admin_note?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PreviewResponse {
   before: Outline;
   after: Outline;

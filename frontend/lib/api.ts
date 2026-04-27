@@ -34,7 +34,12 @@ export const api = {
       body: JSON.stringify({ email, password }),
     }),
   logout: () => request<void>("/auth/logout", { method: "POST" }),
-  me: () => request<{ id: string; email: string }>("/auth/me"),
+  me: () => request<{ id: string; email: string; role: "user" | "admin" }>("/auth/me"),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<void>("/auth/password", {
+      method: "PATCH",
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    }),
   upload: (file: File) => {
     const fd = new FormData();
     fd.append("file", file);
@@ -95,4 +100,32 @@ export const api = {
     }),
   batchDownloadUrl: (jobIds: string[]) =>
     `${BASE}/jobs/batch/download?ids=${jobIds.join(",")}`,
+  submitFeedback: (
+    category: import("./types").FeedbackCategory,
+    title: string,
+    body: string,
+  ) =>
+    request<import("./types").Feedback>("/feedback", {
+      method: "POST",
+      body: JSON.stringify({ category, title, body }),
+    }),
+  listMyFeedback: () => request<import("./types").Feedback[]>("/feedback/me"),
+  listAdminFeedback: (filter?: {
+    status?: import("./types").FeedbackStatus;
+    category?: import("./types").FeedbackCategory;
+  }) => {
+    const qs = new URLSearchParams();
+    if (filter?.status) qs.set("status", filter.status);
+    if (filter?.category) qs.set("category", filter.category);
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return request<import("./types").Feedback[]>(`/admin/feedback${suffix}`);
+  },
+  updateAdminFeedback: (
+    id: string,
+    body: { status?: import("./types").FeedbackStatus; admin_note?: string },
+  ) =>
+    request<import("./types").Feedback>(`/admin/feedback/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
 };

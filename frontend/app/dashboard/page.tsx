@@ -3,7 +3,6 @@ import { fetchMe } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { JobsList } from "@/components/jobs-list";
-import { LogoutButton } from "@/components/logout-button";
 import type { JobSummary } from "@/lib/types";
 
 // 서버 컴포넌트 → 컨테이너 내부에서 backend로 직접 fetch
@@ -29,25 +28,13 @@ export default async function DashboardPage() {
   return (
     <main className="mx-auto max-w-3xl p-6 pt-12">
       <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">히스토리</h1>
-          <p className="mt-1 text-sm text-text-muted">{me.email}</p>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            href="/templates"
-            className="rounded-token border border-border bg-surface-elevated px-3 py-1.5 text-sm hover:bg-surface"
-          >
-            템플릿
-          </Link>
-          <Link
-            href="/"
-            className="rounded-token bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-          >
-            새 변환
-          </Link>
-          <LogoutButton />
-        </div>
+        <h1 className="text-2xl font-semibold tracking-tight">히스토리</h1>
+        <Link
+          href="/"
+          className="rounded-token bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
+        >
+          새 변환
+        </Link>
       </header>
 
       <JobsList initialJobs={jobs} />

@@ -1,11 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { StyleSpec, Template } from "@/lib/types";
 import { StyleSpecForm } from "@/components/template-form/StyleSpecForm";
-import { LogoutButton } from "@/components/logout-button";
 
 type EditState =
   | { mode: "idle" }
@@ -111,20 +109,9 @@ export default function TemplatesPage() {
 
   return (
     <main className="mx-auto max-w-4xl p-6 pt-12">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">템플릿</h1>
-          <p className="mt-1 text-sm text-text-muted">빌트인을 복제하거나 직접 만들어 저장하세요.</p>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            href="/dashboard"
-            className="rounded-token border border-border bg-surface-elevated px-3 py-1.5 text-sm hover:bg-surface"
-          >
-            히스토리
-          </Link>
-          <LogoutButton />
-        </div>
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">템플릿</h1>
+        <p className="mt-1 text-sm text-text-muted">빌트인을 복제하거나 직접 만들어 저장하세요.</p>
       </header>
 
       {error ? (

@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import type { Block, Outline, PreviewResponse } from "@/lib/types";
-import { LogoutButton } from "@/components/logout-button";
 
 type PairKind = "unchanged" | "level_changed" | "numbered" | "field_preserved";
 
@@ -217,7 +216,6 @@ export default function PreviewPage() {
           >
             ↓ 다운로드
           </a>
-          <LogoutButton />
         </div>
       </header>
 

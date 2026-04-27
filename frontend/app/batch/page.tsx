@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import type { BatchRenderItem, BatchUploadItem, Template } from "@/lib/types";
-import { LogoutButton } from "@/components/logout-button";
 
 type Phase = "idle" | "uploading" | "uploaded" | "rendering" | "ready" | "error";
 
@@ -142,16 +141,13 @@ export default function BatchPage() {
             여러 .docx 를 한 템플릿으로 동시에 변환합니다. 백엔드는 병렬 처리.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => router.push("/")}
-            className="rounded-token border border-border bg-surface-elevated px-3 py-1.5 text-sm hover:bg-surface"
-          >
-            ← 단일 파일
-          </button>
-          <LogoutButton />
-        </div>
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="rounded-token border border-border bg-surface-elevated px-3 py-1.5 text-sm hover:bg-surface"
+        >
+          ← 단일 파일
+        </button>
       </header>
 
       <div className="mt-6 rounded-token-lg border border-border bg-surface-elevated p-6 shadow-token-sm">

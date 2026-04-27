@@ -6,36 +6,8 @@ export default async function HomePage() {
   const me = await fetchMe();
 
   return (
-    <main className="mx-auto max-w-2xl p-6 pt-16">
-      <header className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold tracking-tight">Word Templator</h1>
-        <nav className="flex gap-2 text-sm">
-          {me ? (
-            <>
-              <Link
-                href="/batch"
-                className="rounded-token border border-border bg-surface-elevated px-3 py-1.5 text-text-muted hover:text-text"
-              >
-                일괄 변환
-              </Link>
-              <Link
-                href="/dashboard"
-                className="rounded-token border border-border bg-surface-elevated px-3 py-1.5 text-text-muted hover:text-text"
-              >
-                히스토리
-              </Link>
-            </>
-          ) : (
-            <Link
-              href="/login"
-              className="rounded-token bg-primary px-3 py-1.5 font-medium text-white hover:bg-primary-hover"
-            >
-              로그인
-            </Link>
-          )}
-        </nav>
-      </header>
-
+    <main className="mx-auto max-w-2xl p-6 pt-12">
+      <h1 className="text-3xl font-semibold tracking-tight">Word Templator</h1>
       <p className="mt-3 text-base text-text-muted">
         .docx 파일을 업로드해 표준 양식으로 변환하세요.
       </p>
