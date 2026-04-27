@@ -648,3 +648,25 @@ docker compose -f infra/docker-compose.yml up -d
 - 필드 보존 문단은 **원본 스타일이 유지** — 새 StyleSpec 의 헤딩 폰트/사이즈가 reembed 된 문단에는 적용되지 않음 (R1 trade-off, 코드 + spec 양쪽에 명시)
 - 북마크만 있는 헤딩 문단도 동일하게 원본 보존 — 향후 "북마크만 추출해 새 헤딩에 주입" 으로 개선 가능
 - IF/SEQ 같은 중첩 필드는 best-effort: 원본 OOXML 그대로 보존되므로 깨지지 않지만 분류는 `unknown` (UI 에서 검토 필요로 표시)
+
+---
+
+## Phase 5 완료 검증 — 2026-04-27
+
+> spec 의 원래 Phase 5 (다중 파일 **병합** B 모드) 와 다른 방향. 사용자 의도에 맞춰 **다중 파일 루프 + 병렬 처리** 로 재정의 (각 파일 독립 변환, 한 문서로 합치지 않음).
+
+- 신규 엔드포인트 3개 (`backend/app/api/jobs.py`):
+  - `POST /jobs/batch/upload` — multipart 다파일, `asyncio.to_thread(parse_docx, ...)` + `asyncio.Semaphore(MAX_BATCH_PARALLEL)` 로 병렬 파싱, 파일 단위 검증/실패 격리
+  - `POST /jobs/batch/render` — `{job_ids, template_id, overrides}`, 동일 동시성 패턴으로 `render_docx` 병렬
+  - `GET /jobs/batch/download?ids=a,b,c` — `zipfile.ZIP_DEFLATED` 로 result_path 들을 ZIP 스트림 응답
+- `Settings.max_batch_parallel` (기본 4, env `MAX_BATCH_PARALLEL`)
+- 동시성 단위 테스트 — `tests/test_batch_concurrency.py`: parse/render 의 병렬 실행이 직렬 대비 느려지지 않음 (회귀 가드)
+- 프론트 `/batch` 페이지: 다파일 input → 템플릿 선택 → "전체 변환" → 파일별 진행 상태 (⏳/🟢/✅/❌) → "전체 다운로드 (zip)"
+- 랜딩 헤더에 "일괄 변환" 링크 추가 (인증된 경우만)
+- 단일 파일 플로우 (`/`, `/editor/[jobId]`, `/editor/[jobId]/preview`) 와 검토 페이지는 변경 없음
+
+알려진 한계:
+- batch 모드는 outline 에디터 / 검토 페이지를 거치지 않음 (속도/UX 단순화 우선) — 검토 필요 시 단일 모드 사용
+- 동시성 한계는 `MAX_BATCH_PARALLEL` 로 조정 (CPU-bound 한계로 GIL 영향 — lxml/zipfile 의 C 확장 부분만 병렬화 효과)
+- 50 파일 / 50 MB-per-file 상한 (메모리 + 요청 시간 보호)
+- spec 의 원래 의미의 다중 파일 병합 (B 모드) 은 향후 옵션으로 남겨둠 — 헤딩 충돌 정책(병렬/강등) 디자인은 미정
