@@ -629,3 +629,22 @@ docker compose -f infra/docker-compose.yml up -d
 - 이미지 OOXML 자체의 reembed 는 미구현 — 현재는 placeholder 문단으로 보존
 - 중첩표는 마크다운에서 평탄화 표시(원본은 보존)
 - `test_api_*.py` 는 `TEST_DATABASE_URL` env 가 필요 (Phase 1 부터 알려진 환경 의존성)
+
+---
+
+## Phase 4 완료 검증 — 2026-04-27
+
+- 필드 검출 — `<w:fldSimple>` + `<w:fldChar>` 영역, `w:instr`/`<w:instrText>` 내용으로 종류(toc/ref/pageref/unknown) 분류 (`extract_field.detect_field_kind`)
+- 북마크 검출 — `<w:bookmarkStart>` 의 name/id 매핑 (`extract_field.extract_bookmarks`)
+- 필드 미리보기 — `<w:fldSimple>` 자식까지 walk 해서 display 텍스트 추출 (python-docx `paragraph.text` 의 fldSimple skip 우회)
+- 필드/북마크가 있는 문단은 통째로 `<w:p>` deepcopy → `raw_ooxml_path(...)/field-N.xml` 디스크 보존 (`clone_paragraph_xml`)
+- 렌더 시 paragraph 의 `raw_xml_ref` 가 있고 ids 가 있으면 새 paragraph 생성 대신 원본 `<w:p>` 그대로 본문에 삽입 (`reembed_paragraph`)
+- 라운드트립 무결성: TOC 의 `\o "1-3" \h \z \u` instr 텍스트 + 북마크 `w:id` 페어링 보존 검증 PASS
+- 손상/누락된 fragment 는 `[원본 누락 — {raw_ref}]` placeholder 로 graceful degradation
+- 프론트: 보존된 문단에 `📎` 배지 (필드 종류 tooltip), 에디터 상단에 "필드/북마크 N개 보존됨, M개 검토 필요" 요약
+- 디스크 정리: `delete_job` 의 `<jobdir>/raw/` recursive cleanup 이 `field-N.xml` 도 포함 (Phase 3 인프라 그대로 활용)
+
+알려진 한계 (Phase 5 후보):
+- 필드 보존 문단은 **원본 스타일이 유지** — 새 StyleSpec 의 헤딩 폰트/사이즈가 reembed 된 문단에는 적용되지 않음 (R1 trade-off, 코드 + spec 양쪽에 명시)
+- 북마크만 있는 헤딩 문단도 동일하게 원본 보존 — 향후 "북마크만 추출해 새 헤딩에 주입" 으로 개선 가능
+- IF/SEQ 같은 중첩 필드는 best-effort: 원본 OOXML 그대로 보존되므로 깨지지 않지만 분류는 `unknown` (UI 에서 검토 필요로 표시)
