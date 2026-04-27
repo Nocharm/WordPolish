@@ -608,3 +608,24 @@ docker compose -f infra/docker-compose.yml up -d
 - 검증 결과:
   - 백엔드 테스트 65/65 PASS (4 신규 H4/H5 테스트)
   - 통합 라운드트립: 빌트인 3개에 h4/h5 자동 반영 (h4/h5: true), level=4 PUT 정상 (200), 새 블록 삽입 PUT 정상, render 200, docx 36KB, 일괄 삭제 (3 → 1) 정상 동작
+
+---
+
+## Phase 3 완료 검증 — 2026-04-27
+
+- 표 → 마크다운 read-only 렌더 완료 (react-markdown + remark-gfm) — `TableBlock`
+- 표 OOXML clone 디스크 보존 + 렌더 시 reembed — `clone_table_xml`, `reembed_table`
+- 표 스타일(보더 색·굵기, 헤더 배경/볼드, 셀 폰트 사이즈) override 적용 — `apply_table_style`
+- 이미지 추출(`<a:blip r:embed>`) → /data/images/<job_id>/image-N.<ext> — `iter_image_blobs`
+- 이미지 미리보기 라우트 `GET /jobs/{id}/images/{idx}` (인증, 본인 job 만)
+- 이미지 hover 미리보기 + placeholder + 캡션 — `ImageBlock`
+- 캡션 휴리스틱(표 N./그림 N./Table N./Figure N./[그림 N]) — `extract_caption`
+- 표/이미지 직전·직후 캡션 흡수 → outline 에서 해당 paragraph 빠짐
+- 병합셀(`gridSpan`/`vMerge`)은 `[병합셀]` 마커, 원본 OOXML 은 그대로 보존(R4)
+- 손상된 OOXML 조각은 `[표 원본 누락 — raw_ref]` placeholder 로 graceful degradation
+
+알려진 한계 (Phase 4~5 에서 해결):
+- 필드(TOC/REF/PAGEREF) 는 여전히 placeholder
+- 이미지 OOXML 자체의 reembed 는 미구현 — 현재는 placeholder 문단으로 보존
+- 중첩표는 마크다운에서 평탄화 표시(원본은 보존)
+- `test_api_*.py` 는 `TEST_DATABASE_URL` env 가 필요 (Phase 1 부터 알려진 환경 의존성)
