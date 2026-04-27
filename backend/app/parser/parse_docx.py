@@ -13,6 +13,13 @@ from docx.text.paragraph import Paragraph
 from app.domain.outline import Block, Outline
 from app.parser.detect_heading import detect_level
 from app.parser.extract_caption import is_caption, pick_caption
+from app.parser.extract_field import (
+    clone_paragraph_xml,
+    detect_field_kind,
+    extract_field_preview,
+    paragraph_has_bookmark,
+    paragraph_has_field,
+)
 from app.parser.extract_image import ImageBlob, iter_image_blobs
 from app.parser.extract_table import clone_table_xml, table_to_markdown
 from app.storage.files import image_path, raw_ooxml_path
@@ -116,6 +123,16 @@ def parse_docx(
                 if not blobs:
                     level, detected_by = detect_level(item, paragraph_index=para_idx)
                     para_idx += 1
+                    field_kind = detect_field_kind(item)
+                    has_marker = paragraph_has_field(item) or paragraph_has_bookmark(item)
+                    raw_xml_ref: str | None = None
+                    preview_text: str | None = None
+                    if has_marker and user_id is not None and job_id is not None:
+                        raw_xml_ref = f"field-{para_idx - 1}"
+                        raw_ooxml_path(user_id, job_id, raw_xml_ref).write_bytes(
+                            clone_paragraph_xml(item)
+                        )
+                        preview_text = extract_field_preview(item)
                     blocks.append(
                         Block(
                             id=_new_id(),
@@ -124,6 +141,9 @@ def parse_docx(
                             text=item.text,
                             detected_by=detected_by,
                             alignment=_extract_alignment(item),
+                            raw_xml_ref=raw_xml_ref,
+                            field_kind=field_kind,
+                            preview_text=preview_text,
                         )
                     )
                     continue
@@ -152,6 +172,14 @@ def parse_docx(
 
             level, detected_by = detect_level(item, paragraph_index=para_idx)
             para_idx += 1
+            field_kind = detect_field_kind(item)
+            has_marker = paragraph_has_field(item) or paragraph_has_bookmark(item)
+            raw_xml_ref: str | None = None
+            preview_text: str | None = None
+            if has_marker and user_id is not None and job_id is not None:
+                raw_xml_ref = f"field-{para_idx - 1}"
+                raw_ooxml_path(user_id, job_id, raw_xml_ref).write_bytes(clone_paragraph_xml(item))
+                preview_text = extract_field_preview(item)
             blocks.append(
                 Block(
                     id=_new_id(),
@@ -160,6 +188,9 @@ def parse_docx(
                     text=item.text,
                     detected_by=detected_by,
                     alignment=_extract_alignment(item),
+                    raw_xml_ref=raw_xml_ref,
+                    field_kind=field_kind,
+                    preview_text=preview_text,
                 )
             )
             continue

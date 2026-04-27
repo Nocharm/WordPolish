@@ -1,9 +1,12 @@
-"""parse_docx: .docx → Outline."""
+"""parse_docx: .docx → Outline (Phase 3 표·이미지 + Phase 4 필드/북마크)."""
 
 import uuid
+import uuid as _uuid
 from pathlib import Path
 
 from app.parser.parse_docx import parse_docx
+from app.parser.parse_docx import parse_docx as _parse
+from tests.fixtures.build_field_sample import build_sample_with_field_and_bookmark
 from tests.fixtures.build_table_image_sample import build_sample_with_table_and_image
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
@@ -119,3 +122,47 @@ def test_parse_docx_phase3_back_compat_without_ids(tmp_path):
     image = next(b for b in outline.blocks if b.kind == "image")
     assert image.raw_ref is None
     assert image.preview_url is None
+
+
+def test_parse_docx_phase4_preserves_field_and_bookmark_paragraphs(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    src = tmp_path / "f.docx"
+    build_sample_with_field_and_bookmark(src)
+    user_id = _uuid.uuid4()
+    job_id = _uuid.uuid4()
+    outline = _parse(src.read_bytes(), filename="f.docx", user_id=user_id, job_id=job_id)
+
+    paragraphs = [b for b in outline.blocks if b.kind == "paragraph"]
+    h1 = next(b for b in paragraphs if b.text and b.text.strip() == "개요")
+    assert h1.raw_xml_ref is not None and h1.raw_xml_ref.startswith("field-")
+    assert h1.field_kind is None  # bookmark only, no field
+
+    toc = next(b for b in paragraphs if b.field_kind == "toc")
+    assert toc.raw_xml_ref is not None
+    assert toc.preview_text and "목차" in toc.preview_text
+
+    ref = next(b for b in paragraphs if b.field_kind == "ref")
+    assert ref.raw_xml_ref is not None
+    assert ref.preview_text and "개요" in ref.preview_text
+
+    raw_dir = tmp_path / "docs" / str(user_id) / str(job_id) / "raw"
+    saved = sorted(raw_dir.glob("field-*.xml"))
+    assert len(saved) == 3
+
+
+def test_parse_docx_phase4_no_field_no_save(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    from docx import Document
+
+    p = tmp_path / "plain.docx"
+    doc = Document()
+    doc.add_paragraph("그냥 텍스트")
+    doc.save(str(p))
+
+    user_id = _uuid.uuid4()
+    job_id = _uuid.uuid4()
+    outline = _parse(p.read_bytes(), filename="plain.docx", user_id=user_id, job_id=job_id)
+    for b in outline.blocks:
+        if b.kind == "paragraph":
+            assert b.raw_xml_ref is None
+            assert b.field_kind is None
