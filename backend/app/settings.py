@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     data_dir: str = Field("/data", alias="DATA_DIR")
     file_retention_days: int = Field(30, alias="FILE_RETENTION_DAYS")
     cors_origins: str = Field("http://localhost:3000", alias="CORS_ORIGINS")
+    max_batch_parallel: int = Field(4, alias="MAX_BATCH_PARALLEL")
 
     @property
     def cors_origin_list(self) -> list[str]:
