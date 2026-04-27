@@ -14,6 +14,7 @@ from app.domain.outline import Block, Outline
 from app.parser.detect_heading import detect_level
 from app.parser.extract_caption import is_caption, pick_caption
 from app.parser.extract_field import (
+    FieldKind,
     clone_paragraph_xml,
     detect_field_kind,
     extract_field_preview,
@@ -76,7 +77,7 @@ def _emit_field_artifacts(
     para_seq: int,
     user_id: uuid.UUID | None,
     job_id: uuid.UUID | None,
-) -> tuple[str | None, str | None, str | None]:
+) -> tuple[FieldKind | None, str | None, str | None]:
     """필드/북마크 보존: (field_kind, raw_xml_ref, preview_text) 반환.
 
     필드 탐지는 ids 없어도 수행 — 디스크 저장만 ids 가 있을 때.
