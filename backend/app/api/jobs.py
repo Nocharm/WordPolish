@@ -90,137 +90,9 @@ async def post_upload(
     return UploadResponse(job_id=str(job.id), outline=outline.model_dump())
 
 
-@router.get("/{job_id}/outline")
-def get_outline(
-    job_id: str,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    job = _get_user_job(db, user, job_id)
-    return job.outline_json
-
-
-@router.put("/{job_id}/outline")
-def put_outline(
-    job_id: str,
-    body: dict,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict[str, str]:
-    job = _get_user_job(db, user, job_id)
-    parsed = Outline.model_validate(body)
-    job.outline_json = parsed.model_dump()
-    db.commit()
-    return {"status": "ok"}
-
-
-@router.post("/{job_id}/render")
-def post_render(
-    job_id: str,
-    body: RenderRequest,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict[str, str]:
-    job = _get_user_job(db, user, job_id)
-    tmpl = db.query(Template).filter_by(id=uuid.UUID(body.template_id)).one_or_none()
-    if tmpl is None:
-        raise HTTPException(status_code=404, detail="template not found")
-    spec_dict = {**tmpl.spec, **body.overrides}
-    spec = StyleSpec.model_validate(spec_dict)
-    outline = Outline.model_validate(job.outline_json)
-    data = render_docx(outline, spec, user_id=user.id, job_id=job.id)
-
-    out = result_path(user.id, job.id)
-    out.write_bytes(data)
-    job.result_path = str(out)
-    job.applied_template_id = tmpl.id
-    job.style_overrides = body.overrides
-    job.status = "rendered"
-    db.commit()
-    return {"status": "ok"}
-
-
-class PreviewRequest(BaseModel):
-    template_id: str
-    overrides: dict[str, Any] = {}
-
-
-@router.post("/{job_id}/preview")
-def post_preview(
-    job_id: str,
-    body: PreviewRequest,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """렌더 전에 좌(원본) / 우(변환 후) outline 을 반환해 사용자가 검토할 수 있게 한다.
-
-    좌측: job.original_outline_json (업로드 시 스냅샷, 비어 있으면 현재 outline 으로 폴백)
-    우측: 현재 outline 에 spec 의 numbering 을 적용한 결과 (헤딩 prefix 부여)
-    """
-    job = _get_user_job(db, user, job_id)
-    tmpl = db.query(Template).filter_by(id=uuid.UUID(body.template_id)).one_or_none()
-    if tmpl is None:
-        raise HTTPException(status_code=404, detail="template not found")
-    spec_dict = {**tmpl.spec, **body.overrides}
-    spec = StyleSpec.model_validate(spec_dict)
-
-    current = Outline.model_validate(job.outline_json)
-    numbered_blocks = renumber(current.blocks, spec)
-    after = current.model_copy(update={"blocks": [b.model_dump() for b in numbered_blocks]})
-
-    before_dict = job.original_outline_json or job.outline_json
-
-    return {
-        "before": before_dict,
-        "after": after.model_dump(),
-        "applied_template_name": tmpl.name,
-        "applied_font_summary": {
-            "body": spec.fonts.body.model_dump(),
-            "h1": spec.fonts.heading.h1.model_dump(),
-            "h2": spec.fonts.heading.h2.model_dump(),
-            "h3": spec.fonts.heading.h3.model_dump(),
-        },
-    }
-
-
-@router.get("/{job_id}/download")
-def get_download(
-    job_id: str,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> FileResponse:
-    job = _get_user_job(db, user, job_id)
-    if job.result_path is None:
-        raise HTTPException(status_code=400, detail="not yet rendered")
-    return FileResponse(
-        path=job.result_path,
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        filename=f"standardized_{job.original_filename}",
-    )
-
-
-@router.get("", response_model=list[JobSummary])
-def get_jobs(
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> list[JobSummary]:
-    rows = db.query(Job).filter_by(user_id=user.id).order_by(Job.created_at.desc()).all()
-    out: list[JobSummary] = []
-    for r in rows:
-        tname: str | None = None
-        if r.applied_template_id is not None:
-            t = db.query(Template).filter_by(id=r.applied_template_id).one_or_none()
-            tname = t.name if t else None
-        out.append(
-            JobSummary(
-                id=str(r.id),
-                original_filename=r.original_filename,
-                status=r.status,
-                created_at=r.created_at.isoformat(),
-                applied_template_name=tname,
-            )
-        )
-    return out
+# ── Batch (Phase 5) ──
+# 단일 라우트 `/{job_id}/render` 등이 `/batch/render` 를 가려서 job_id="batch" 로 잡지 않게,
+# batch 라우트를 단일 라우트보다 먼저 선언한다.
 
 
 class BatchUploadItem(BaseModel):
@@ -449,6 +321,139 @@ def get_batch_download(
         media_type="application/zip",
         headers={"Content-Disposition": 'attachment; filename="standardized_batch.zip"'},
     )
+
+
+@router.get("/{job_id}/outline")
+def get_outline(
+    job_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    job = _get_user_job(db, user, job_id)
+    return job.outline_json
+
+
+@router.put("/{job_id}/outline")
+def put_outline(
+    job_id: str,
+    body: dict,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    job = _get_user_job(db, user, job_id)
+    parsed = Outline.model_validate(body)
+    job.outline_json = parsed.model_dump()
+    db.commit()
+    return {"status": "ok"}
+
+
+@router.post("/{job_id}/render")
+def post_render(
+    job_id: str,
+    body: RenderRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    job = _get_user_job(db, user, job_id)
+    tmpl = db.query(Template).filter_by(id=uuid.UUID(body.template_id)).one_or_none()
+    if tmpl is None:
+        raise HTTPException(status_code=404, detail="template not found")
+    spec_dict = {**tmpl.spec, **body.overrides}
+    spec = StyleSpec.model_validate(spec_dict)
+    outline = Outline.model_validate(job.outline_json)
+    data = render_docx(outline, spec, user_id=user.id, job_id=job.id)
+
+    out = result_path(user.id, job.id)
+    out.write_bytes(data)
+    job.result_path = str(out)
+    job.applied_template_id = tmpl.id
+    job.style_overrides = body.overrides
+    job.status = "rendered"
+    db.commit()
+    return {"status": "ok"}
+
+
+class PreviewRequest(BaseModel):
+    template_id: str
+    overrides: dict[str, Any] = {}
+
+
+@router.post("/{job_id}/preview")
+def post_preview(
+    job_id: str,
+    body: PreviewRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    """렌더 전에 좌(원본) / 우(변환 후) outline 을 반환해 사용자가 검토할 수 있게 한다.
+
+    좌측: job.original_outline_json (업로드 시 스냅샷, 비어 있으면 현재 outline 으로 폴백)
+    우측: 현재 outline 에 spec 의 numbering 을 적용한 결과 (헤딩 prefix 부여)
+    """
+    job = _get_user_job(db, user, job_id)
+    tmpl = db.query(Template).filter_by(id=uuid.UUID(body.template_id)).one_or_none()
+    if tmpl is None:
+        raise HTTPException(status_code=404, detail="template not found")
+    spec_dict = {**tmpl.spec, **body.overrides}
+    spec = StyleSpec.model_validate(spec_dict)
+
+    current = Outline.model_validate(job.outline_json)
+    numbered_blocks = renumber(current.blocks, spec)
+    after = current.model_copy(update={"blocks": [b.model_dump() for b in numbered_blocks]})
+
+    before_dict = job.original_outline_json or job.outline_json
+
+    return {
+        "before": before_dict,
+        "after": after.model_dump(),
+        "applied_template_name": tmpl.name,
+        "applied_font_summary": {
+            "body": spec.fonts.body.model_dump(),
+            "h1": spec.fonts.heading.h1.model_dump(),
+            "h2": spec.fonts.heading.h2.model_dump(),
+            "h3": spec.fonts.heading.h3.model_dump(),
+        },
+    }
+
+
+@router.get("/{job_id}/download")
+def get_download(
+    job_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> FileResponse:
+    job = _get_user_job(db, user, job_id)
+    if job.result_path is None:
+        raise HTTPException(status_code=400, detail="not yet rendered")
+    return FileResponse(
+        path=job.result_path,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        filename=f"standardized_{job.original_filename}",
+    )
+
+
+@router.get("", response_model=list[JobSummary])
+def get_jobs(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[JobSummary]:
+    rows = db.query(Job).filter_by(user_id=user.id).order_by(Job.created_at.desc()).all()
+    out: list[JobSummary] = []
+    for r in rows:
+        tname: str | None = None
+        if r.applied_template_id is not None:
+            t = db.query(Template).filter_by(id=r.applied_template_id).one_or_none()
+            tname = t.name if t else None
+        out.append(
+            JobSummary(
+                id=str(r.id),
+                original_filename=r.original_filename,
+                status=r.status,
+                created_at=r.created_at.isoformat(),
+                applied_template_name=tname,
+            )
+        )
+    return out
 
 
 @router.delete("/{job_id}", status_code=204)

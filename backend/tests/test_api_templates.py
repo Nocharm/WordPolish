@@ -127,6 +127,7 @@ def test_cannot_modify_other_users_template(client):
 
 def test_404_on_unknown_template_id(client):
     import uuid
+
     _signup_login(client)
     fake = str(uuid.uuid4())
     r = client.patch(f"/templates/{fake}", json={"name": "X"})

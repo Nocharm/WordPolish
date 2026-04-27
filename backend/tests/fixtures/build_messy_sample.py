@@ -59,8 +59,7 @@ def build() -> None:
     # ── 2. 일반 헤딩 + 본문 (제대로 된 Word Heading 1) ──
     doc.add_heading("개요", level=1)
     doc.add_paragraph(
-        "본 보고서는 2026년 4월 진행된 사내 워크숍의 결과를 정리하고, "
-        "향후 개선 방향을 제시한다."
+        "본 보고서는 2026년 4월 진행된 사내 워크숍의 결과를 정리하고, " "향후 개선 방향을 제시한다."
     )
     doc.add_paragraph("워크숍은 4월 15일부터 17일까지 강원도 평창에서 진행되었다.")
     doc.add_paragraph()  # 의미 없는 빈 줄
@@ -161,9 +160,7 @@ def build() -> None:
         size_pt=14,
         align=WD_ALIGN_PARAGRAPH.CENTER,
     )
-    doc.add_paragraph(
-        "워크숍은 전반적으로 성공적이었으며, 부서 간 협업 강화에 기여하였다."
-    )
+    doc.add_paragraph("워크숍은 전반적으로 성공적이었으며, 부서 간 협업 강화에 기여하였다.")
 
     # ── 9. 점 안 찍은 번호 + 화살표 글머리 ──
     add_styled_para(doc, "3 향후 개선 사항", bold=True, size_pt=13)

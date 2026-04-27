@@ -1,7 +1,7 @@
 """Job 모델 — 변환 작업 메타 + 편집된 outline."""
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -11,7 +11,7 @@ from app.db.base import Base
 
 
 def _default_expires_at() -> datetime:
-    return datetime.now(tz=timezone.utc) + timedelta(days=30)
+    return datetime.now(tz=UTC) + timedelta(days=30)
 
 
 class Job(Base):

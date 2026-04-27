@@ -9,11 +9,16 @@ from typing import Any, Literal
 DetectedBy = Literal["word_style", "heuristic"]
 
 _WORD_HEADING = {
-    "Heading 1": 1, "제목 1": 1,
-    "Heading 2": 2, "제목 2": 2,
-    "Heading 3": 3, "제목 3": 3,
-    "Heading 4": 4, "제목 4": 4,
-    "Heading 5": 5, "제목 5": 5,
+    "Heading 1": 1,
+    "제목 1": 1,
+    "Heading 2": 2,
+    "제목 2": 2,
+    "Heading 3": 3,
+    "제목 3": 3,
+    "Heading 4": 4,
+    "제목 4": 4,
+    "Heading 5": 5,
+    "제목 5": 5,
 }
 
 _RE_H1_DECIMAL = re.compile(r"^\d+\.\s")
@@ -23,11 +28,11 @@ _RE_H4_DECIMAL = re.compile(r"^\d+\.\d+\.\d+\.\d+\.\s")
 _RE_H5_DECIMAL = re.compile(r"^\d+\.\d+\.\d+\.\d+\.\d+\.\s")
 _RE_KOREAN_LETTER = re.compile(r"^[가-힣]\.\s")
 
-_RE_PAREN_NUM = re.compile(r"^\(\d+\)\s")           # (1) 텍스트
-_RE_CLOSING_PAREN_NUM = re.compile(r"^\d+\)\s")     # 1) 텍스트
+_RE_PAREN_NUM = re.compile(r"^\(\d+\)\s")  # (1) 텍스트
+_RE_CLOSING_PAREN_NUM = re.compile(r"^\d+\)\s")  # 1) 텍스트
 _RE_CIRCLED_NUM = re.compile(r"^[①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮]\s")
-_RE_STAR_WRAPPED = re.compile(r"^\*{2,}\s*[^*]+?\s*\*{2,}$")   # *** 결론 ***
-_RE_BARE_NUMBER = re.compile(r"^\d+\s+\S")          # 점 없는 "1 본문"
+_RE_STAR_WRAPPED = re.compile(r"^\*{2,}\s*[^*]+?\s*\*{2,}$")  # *** 결론 ***
+_RE_BARE_NUMBER = re.compile(r"^\d+\s+\S")  # 점 없는 "1 본문"
 
 
 def _is_bold_or_large(paragraph: Any) -> bool:
@@ -57,7 +62,11 @@ def _has_bold(paragraph: Any) -> bool:
 
 def _is_centered(paragraph: Any) -> bool:
     # WD_PARAGRAPH_ALIGNMENT.CENTER = 1
-    align = getattr(paragraph.paragraph_format, "alignment", None) if hasattr(paragraph, "paragraph_format") else None
+    align = (
+        getattr(paragraph.paragraph_format, "alignment", None)
+        if hasattr(paragraph, "paragraph_format")
+        else None
+    )
     return align == 1
 
 

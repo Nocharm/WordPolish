@@ -51,7 +51,9 @@ def post_signup(creds: Credentials, db: Session = Depends(get_db)) -> UserOut:
 
 
 @router.post("/login")
-def post_login(creds: Credentials, response: Response, db: Session = Depends(get_db)) -> dict[str, str]:
+def post_login(
+    creds: Credentials, response: Response, db: Session = Depends(get_db)
+) -> dict[str, str]:
     user = db.query(User).filter_by(email=creds.email).one_or_none()
     if user is None or not verify_password(creds.password, user.password_hash):
         raise HTTPException(status_code=401, detail="invalid credentials")

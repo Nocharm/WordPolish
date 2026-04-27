@@ -1,6 +1,6 @@
 """bcrypt 패스워드 해시 + JWT 발급/디코드."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from jose import JWTError, jwt
@@ -21,7 +21,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(subject: str) -> str:
-    expire = datetime.now(tz=timezone.utc) + timedelta(hours=_settings.jwt_expires_hours)
+    expire = datetime.now(tz=UTC) + timedelta(hours=_settings.jwt_expires_hours)
     payload = {"sub": subject, "exp": expire}
     return jwt.encode(payload, _settings.jwt_secret, algorithm=_settings.jwt_algorithm)
 

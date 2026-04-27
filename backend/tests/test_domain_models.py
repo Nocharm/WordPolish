@@ -18,7 +18,14 @@ def test_paragraph_level_out_of_range():
 
 
 def test_table_block_requires_markdown():
-    b = Block(id="b-2", kind="table", level=0, markdown="| a |\n|---|\n| 1 |", caption="표 1", raw_ref="t-0")
+    b = Block(
+        id="b-2",
+        kind="table",
+        level=0,
+        markdown="| a |\n|---|\n| 1 |",
+        caption="표 1",
+        raw_ref="t-0",
+    )
     assert b.markdown.startswith("|")
 
 
@@ -32,20 +39,33 @@ def test_outline_minimal():
 
 
 def test_style_spec_minimal():
-    spec = StyleSpec.model_validate({
-        "fonts": {
-            "body": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 11},
-            "heading": {
-                "h1": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 16, "bold": True},
-                "h2": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 14, "bold": True},
-                "h3": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 12, "bold": True},
-                "h4": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 11, "bold": True},
-                "h5": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 10, "bold": True},
+    spec = StyleSpec.model_validate(
+        {
+            "fonts": {
+                "body": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 11},
+                "heading": {
+                    "h1": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 16, "bold": True},
+                    "h2": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 14, "bold": True},
+                    "h3": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 12, "bold": True},
+                    "h4": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 11, "bold": True},
+                    "h5": {"korean": "맑은 고딕", "ascii": "Arial", "size_pt": 10, "bold": True},
+                },
             },
-        },
-        "paragraph": {"line_spacing": 1.5, "alignment": "justify", "first_line_indent_pt": 0},
-        "numbering": {"h1": "1.", "h2": "1.1.", "h3": "1.1.1.", "list": "decimal"},
-        "table": {"border_color": "#000000", "border_width_pt": 0.5, "header_bg": "#D9D9D9", "header_bold": True, "cell_font_size_pt": 10},
-        "page": {"margin_top_mm": 25, "margin_bottom_mm": 25, "margin_left_mm": 25, "margin_right_mm": 25},
-    })
+            "paragraph": {"line_spacing": 1.5, "alignment": "justify", "first_line_indent_pt": 0},
+            "numbering": {"h1": "1.", "h2": "1.1.", "h3": "1.1.1.", "list": "decimal"},
+            "table": {
+                "border_color": "#000000",
+                "border_width_pt": 0.5,
+                "header_bg": "#D9D9D9",
+                "header_bold": True,
+                "cell_font_size_pt": 10,
+            },
+            "page": {
+                "margin_top_mm": 25,
+                "margin_bottom_mm": 25,
+                "margin_left_mm": 25,
+                "margin_right_mm": 25,
+            },
+        }
+    )
     assert spec.fonts.body.korean == "맑은 고딕"

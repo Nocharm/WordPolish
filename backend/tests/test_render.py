@@ -25,7 +25,9 @@ def _build_outline() -> Outline:
         source_filename="x.docx",
         blocks=[
             Block(id="b-1", kind="paragraph", level=1, text="개요", detected_by="word_style"),
-            Block(id="b-2", kind="paragraph", level=0, text="본문 sample.", detected_by="word_style"),
+            Block(
+                id="b-2", kind="paragraph", level=0, text="본문 sample.", detected_by="word_style"
+            ),
             Block(id="b-3", kind="table", level=0, raw_ref="table-0"),
         ],
     )
@@ -62,7 +64,14 @@ def test_render_respects_block_alignment():
         job_id="j-1",
         source_filename="x.docx",
         blocks=[
-            Block(id="b-1", kind="paragraph", level=0, text="가운데", detected_by="user", alignment="center"),
+            Block(
+                id="b-1",
+                kind="paragraph",
+                level=0,
+                text="가운데",
+                detected_by="user",
+                alignment="center",
+            ),
             Block(id="b-2", kind="paragraph", level=0, text="기본", detected_by="user"),
         ],
     )
