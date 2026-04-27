@@ -1,6 +1,7 @@
-"""Outline + StyleSpec → .docx 바이트."""
+"""Outline + StyleSpec → .docx 바이트 (Phase 3: 표 reembed + 이미지 placeholder)."""
 
 import io
+import uuid
 
 from docx import Document
 from docx.shared import Mm
@@ -9,12 +10,7 @@ from app.domain.outline import Block, Outline
 from app.domain.style_spec import StyleSpec
 from app.renderer.apply_style import apply_paragraph_style
 from app.renderer.inject_numbering import renumber
-
-_PLACEHOLDER = {
-    "table": "[표는 다음 Phase에서 지원 예정]",
-    "image": "[이미지는 다음 Phase에서 지원 예정]",
-    "field": "[참조는 다음 Phase에서 지원 예정]",
-}
+from app.renderer.reembed_raw import reembed_table
 
 
 def _setup_page(doc, spec: StyleSpec) -> None:
@@ -25,24 +21,67 @@ def _setup_page(doc, spec: StyleSpec) -> None:
     section.right_margin = Mm(spec.page.margin_right_mm)
 
 
-def _add_paragraph(doc, block: Block, spec: StyleSpec) -> None:
-    if block.kind == "paragraph":
-        para = doc.add_paragraph(block.text or "")
-        apply_paragraph_style(para, block.level, spec, alignment_override=block.alignment)
-    else:
-        text = _PLACEHOLDER.get(block.kind, "[unknown block]")
-        if block.caption:
-            text = f"{text} ({block.caption})"
-        para = doc.add_paragraph(text)
-        apply_paragraph_style(para, 0, spec)
+def _add_paragraph_block(doc, block: Block, spec: StyleSpec) -> None:
+    para = doc.add_paragraph(block.text or "")
+    apply_paragraph_style(para, block.level, spec, alignment_override=block.alignment)
 
 
-def render_docx(outline: Outline, spec: StyleSpec) -> bytes:
+def _add_image_placeholder(doc, block: Block, spec: StyleSpec) -> None:
+    text = "[이미지]"
+    if block.caption:
+        text = f"{text} {block.caption}"
+    para = doc.add_paragraph(text)
+    apply_paragraph_style(para, 0, spec)
+
+
+def _add_field_placeholder(doc, block: Block, spec: StyleSpec) -> None:
+    text = "[참조 — Phase 4 예정]"
+    if block.preview_text:
+        text = f"{text} {block.preview_text}"
+    para = doc.add_paragraph(text)
+    apply_paragraph_style(para, 0, spec)
+
+
+def _add_caption_paragraph(doc, caption: str, spec: StyleSpec) -> None:
+    para = doc.add_paragraph(caption)
+    apply_paragraph_style(para, 0, spec)
+
+
+def render_docx(
+    outline: Outline,
+    spec: StyleSpec,
+    *,
+    user_id: uuid.UUID | None = None,
+    job_id: uuid.UUID | None = None,
+) -> bytes:
     doc = Document()
     _setup_page(doc, spec)
     blocks = renumber(outline.blocks, spec)
+
     for b in blocks:
-        _add_paragraph(doc, b, spec)
+        if b.kind == "paragraph":
+            _add_paragraph_block(doc, b, spec)
+            continue
+
+        if b.caption:
+            _add_caption_paragraph(doc, b.caption, spec)
+
+        if b.kind == "table":
+            if b.raw_ref and user_id is not None and job_id is not None:
+                reembed_table(doc, raw_ref=b.raw_ref, user_id=user_id, job_id=job_id, spec=spec)
+            else:
+                para = doc.add_paragraph(b.markdown or "[표 원본 미보존]")
+                apply_paragraph_style(para, 0, spec)
+            continue
+
+        if b.kind == "image":
+            _add_image_placeholder(doc, b, spec)
+            continue
+
+        if b.kind == "field":
+            _add_field_placeholder(doc, b, spec)
+            continue
+
     buf = io.BytesIO()
     doc.save(buf)
     return buf.getvalue()

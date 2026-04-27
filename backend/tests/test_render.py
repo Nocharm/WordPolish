@@ -38,8 +38,8 @@ def test_render_emits_valid_docx():
     paras = [p.text for p in doc.paragraphs]
     assert any("개요" in t for t in paras)
     assert "본문 sample." in paras
-    # 표 placeholder
-    assert any("[표는" in t for t in paras)
+    # 표 placeholder (raw_ref 만 있고 user_id/job_id 없으면 fallback 문자열)
+    assert any("[표 원본 미보존]" in t for t in paras)
 
 
 def test_render_applies_eastasia_font_for_korean():
