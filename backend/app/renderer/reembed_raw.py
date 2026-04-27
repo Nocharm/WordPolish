@@ -34,7 +34,11 @@ def reembed_table(
     if not p.exists():
         doc.add_paragraph(f"[표 원본 누락 — {raw_ref}]")
         return
-    tbl_el = _parse_fragment(p.read_bytes())
-    apply_table_style(tbl_el, spec)
-    doc.element.body.append(tbl_el)
-    doc.add_paragraph()  # python-docx 가 표 직후 빈 문단을 요구하는 경우 안전 패딩
+    try:
+        tbl_el = _parse_fragment(p.read_bytes())
+        apply_table_style(tbl_el, spec)
+        doc.element.body.append(tbl_el)
+        doc.add_paragraph()  # python-docx 가 표 직후 빈 문단을 요구하는 경우 안전 패딩
+    except (etree.XMLSyntaxError, IndexError):
+        # 조각이 손상(잘림/구문 오류/빈 루트)되어 있어도 500 대신 자리표시자로 폴백
+        doc.add_paragraph(f"[표 원본 누락 — {raw_ref}]")

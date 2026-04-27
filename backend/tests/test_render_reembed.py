@@ -81,3 +81,31 @@ def test_render_image_placeholder_when_block_image(tmp_path, monkeypatch):
     out_doc = Document(io.BytesIO(out_bytes))
     paras = [p.text for p in out_doc.paragraphs]
     assert any("[이미지]" in t and "그림 1. 예시" in t for t in paras)
+
+
+def test_render_reembed_falls_back_on_corrupt_raw_ref(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    # Write a corrupt fragment to the raw_ref path
+    from app.storage.files import raw_ooxml_path
+
+    user_id = uuid.uuid4()
+    job_id = uuid.uuid4()
+    raw_ooxml_path(user_id, job_id, "table-0").write_bytes(b"not valid xml")
+
+    outline = Outline(
+        job_id=str(job_id),
+        source_filename="x.docx",
+        blocks=[
+            Block(
+                id="b-1",
+                kind="table",
+                level=0,
+                raw_ref="table-0",
+                markdown="| a |\n| - |\n| b |",
+            )
+        ],
+    )
+    out_bytes = render_docx(outline, _spec_minimal(), user_id=user_id, job_id=job_id)
+    out_doc = Document(io.BytesIO(out_bytes))
+    paras = [p.text for p in out_doc.paragraphs]
+    assert any("[표 원본 누락 — table-0]" in t for t in paras)
