@@ -10,7 +10,7 @@ from app.domain.outline import Block, Outline
 from app.domain.style_spec import StyleSpec
 from app.renderer.apply_style import apply_paragraph_style
 from app.renderer.inject_numbering import renumber
-from app.renderer.reembed_raw import reembed_table
+from app.renderer.reembed_raw import reembed_paragraph, reembed_table
 
 
 def _setup_page(doc, spec: StyleSpec) -> None:
@@ -60,7 +60,10 @@ def render_docx(
 
     for b in blocks:
         if b.kind == "paragraph":
-            _add_paragraph_block(doc, b, spec)
+            if b.raw_xml_ref and user_id is not None and job_id is not None:
+                reembed_paragraph(doc, raw_ref=b.raw_xml_ref, user_id=user_id, job_id=job_id)
+            else:
+                _add_paragraph_block(doc, b, spec)
             continue
 
         if b.caption:

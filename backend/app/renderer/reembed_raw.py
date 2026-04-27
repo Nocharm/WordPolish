@@ -42,3 +42,26 @@ def reembed_table(
     except (etree.XMLSyntaxError, IndexError):
         # 조각이 손상(잘림/구문 오류/빈 루트)되어 있어도 500 대신 자리표시자로 폴백
         doc.add_paragraph(f"[표 원본 누락 — {raw_ref}]")
+
+
+def reembed_paragraph(
+    doc: DocxDocument,
+    *,
+    raw_ref: str,
+    user_id: uuid.UUID,
+    job_id: uuid.UUID,
+) -> None:
+    """디스크의 원본 <w:p> 를 본문에 그대로 삽입.
+
+    runs / 필드 / 북마크 / 기존 스타일을 모두 보존한다 (Phase 4 trade-off:
+    새 StyleSpec 의 폰트/사이즈는 보존된 문단에는 적용되지 않음).
+    """
+    p = raw_ooxml_path(user_id, job_id, raw_ref)
+    if not p.exists():
+        doc.add_paragraph(f"[원본 누락 — {raw_ref}]")
+        return
+    try:
+        p_el = _parse_fragment(p.read_bytes())
+        doc.element.body.append(p_el)
+    except (etree.XMLSyntaxError, IndexError):
+        doc.add_paragraph(f"[원본 누락 — {raw_ref}]")
