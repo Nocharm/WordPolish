@@ -1,5 +1,6 @@
 """Jobs 라우터 — 업로드, outline 조회/저장, 렌더, 다운로드, 히스토리."""
 
+import shutil
 import uuid
 from pathlib import Path
 from typing import Any
@@ -15,7 +16,7 @@ from app.domain.outline import Outline
 from app.domain.style_spec import StyleSpec
 from app.parser.parse_docx import parse_docx
 from app.renderer.render_docx import render_docx
-from app.storage.files import result_path, source_path
+from app.storage.files import image_dir, job_dir, result_path, source_path
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -72,7 +73,7 @@ async def post_upload(
     src.write_bytes(content)
     job.source_path = str(src)
 
-    outline = parse_docx(content, filename=file.filename)
+    outline = parse_docx(content, filename=file.filename, user_id=user.id, job_id=job.id)
     outline = outline.model_copy(update={"job_id": str(job.id)})
     job.outline_json = outline.model_dump()
 
@@ -119,7 +120,7 @@ def post_render(
     spec_dict = {**tmpl.spec, **body.overrides}
     spec = StyleSpec.model_validate(spec_dict)
     outline = Outline.model_validate(job.outline_json)
-    data = render_docx(outline, spec)
+    data = render_docx(outline, spec, user_id=user.id, job_id=job.id)
 
     out = result_path(user.id, job.id)
     out.write_bytes(data)
@@ -187,5 +188,17 @@ def delete_job(
                     p.unlink()
                 except OSError:
                     pass
+    raw_dir = job_dir(user.id, job.id) / "raw"
+    if raw_dir.exists():
+        try:
+            shutil.rmtree(raw_dir)
+        except OSError:
+            pass
+    img = image_dir(job.id)
+    if img.exists():
+        try:
+            shutil.rmtree(img)
+        except OSError:
+            pass
     db.delete(job)
     db.commit()
