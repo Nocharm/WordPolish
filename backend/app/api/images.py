@@ -22,7 +22,13 @@ def get_image(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> FileResponse:
-    job = db.query(Job).filter_by(id=uuid.UUID(job_id), user_id=user.id).one_or_none()
+    if idx < 0:
+        raise HTTPException(status_code=404, detail="image not found")
+    try:
+        job_uuid = uuid.UUID(job_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail="job not found") from e
+    job = db.query(Job).filter_by(id=job_uuid, user_id=user.id).one_or_none()
     if job is None:
         raise HTTPException(status_code=404, detail="job not found")
 
