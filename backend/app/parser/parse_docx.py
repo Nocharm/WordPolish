@@ -70,6 +70,27 @@ def _para_text(items: list[object], idx: int) -> str | None:
     return None
 
 
+def _emit_field_artifacts(
+    item: Paragraph,
+    *,
+    para_seq: int,
+    user_id: uuid.UUID | None,
+    job_id: uuid.UUID | None,
+) -> tuple[str | None, str | None, str | None]:
+    """필드/북마크 보존: (field_kind, raw_xml_ref, preview_text) 반환.
+
+    필드 탐지는 ids 없어도 수행 — 디스크 저장만 ids 가 있을 때.
+    """
+    field_kind = detect_field_kind(item)
+    has_marker = paragraph_has_field(item) or paragraph_has_bookmark(item)
+    if not (has_marker and user_id is not None and job_id is not None):
+        return field_kind, None, None
+    raw_xml_ref = f"field-{para_seq}"
+    raw_ooxml_path(user_id, job_id, raw_xml_ref).write_bytes(clone_paragraph_xml(item))
+    preview_text = extract_field_preview(item)
+    return field_kind, raw_xml_ref, preview_text
+
+
 def parse_docx(
     content: bytes,
     *,
@@ -122,17 +143,11 @@ def parse_docx(
                 blobs: list[ImageBlob] = list(iter_image_blobs(item, doc))
                 if not blobs:
                     level, detected_by = detect_level(item, paragraph_index=para_idx)
+                    seq = para_idx
                     para_idx += 1
-                    field_kind = detect_field_kind(item)
-                    has_marker = paragraph_has_field(item) or paragraph_has_bookmark(item)
-                    raw_xml_ref: str | None = None
-                    preview_text: str | None = None
-                    if has_marker and user_id is not None and job_id is not None:
-                        raw_xml_ref = f"field-{para_idx - 1}"
-                        raw_ooxml_path(user_id, job_id, raw_xml_ref).write_bytes(
-                            clone_paragraph_xml(item)
-                        )
-                        preview_text = extract_field_preview(item)
+                    field_kind, raw_xml_ref, preview_text = _emit_field_artifacts(
+                        item, para_seq=seq, user_id=user_id, job_id=job_id
+                    )
                     blocks.append(
                         Block(
                             id=_new_id(),
@@ -171,15 +186,11 @@ def parse_docx(
                 continue
 
             level, detected_by = detect_level(item, paragraph_index=para_idx)
+            seq = para_idx
             para_idx += 1
-            field_kind = detect_field_kind(item)
-            has_marker = paragraph_has_field(item) or paragraph_has_bookmark(item)
-            raw_xml_ref: str | None = None
-            preview_text: str | None = None
-            if has_marker and user_id is not None and job_id is not None:
-                raw_xml_ref = f"field-{para_idx - 1}"
-                raw_ooxml_path(user_id, job_id, raw_xml_ref).write_bytes(clone_paragraph_xml(item))
-                preview_text = extract_field_preview(item)
+            field_kind, raw_xml_ref, preview_text = _emit_field_artifacts(
+                item, para_seq=seq, user_id=user_id, job_id=job_id
+            )
             blocks.append(
                 Block(
                     id=_new_id(),
