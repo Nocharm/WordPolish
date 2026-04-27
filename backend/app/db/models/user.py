@@ -2,12 +2,17 @@
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from sqlalchemy import DateTime, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+
+# string enum (Postgres CHECK 제약 — Alembic 마이그레이션 참고).
+# DB-level enum 타입 대신 VARCHAR + CHECK 로 둠 — 추후 role 추가가 단순함.
+Role = Literal["user", "admin"]
 
 
 class User(Base):
@@ -16,4 +21,5 @@ class User(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(16), nullable=False, server_default="user")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

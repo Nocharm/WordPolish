@@ -35,11 +35,13 @@ class Credentials(BaseModel):
 class UserOut(BaseModel):
     id: str
     email: str
+    role: str
 
 
 @router.post("/signup", status_code=201, response_model=UserOut)
 def post_signup(creds: Credentials, db: Session = Depends(get_db)) -> UserOut:
-    user = User(email=creds.email, password_hash=hash_password(creds.password))
+    role = "admin" if creds.email in _settings.admin_email_set else "user"
+    user = User(email=creds.email, password_hash=hash_password(creds.password), role=role)
     db.add(user)
     try:
         db.commit()
@@ -47,7 +49,7 @@ def post_signup(creds: Credentials, db: Session = Depends(get_db)) -> UserOut:
         db.rollback()
         raise HTTPException(status_code=409, detail="email already registered") from None
     db.refresh(user)
-    return UserOut(id=str(user.id), email=user.email)
+    return UserOut(id=str(user.id), email=user.email, role=user.role)
 
 
 @router.post("/login")
@@ -76,4 +78,23 @@ def post_logout(response: Response) -> None:
 
 @router.get("/me", response_model=UserOut)
 def get_me(user: User = Depends(get_current_user)) -> UserOut:
-    return UserOut(id=str(user.id), email=user.email)
+    return UserOut(id=str(user.id), email=user.email, role=user.role)
+
+
+class PasswordChange(BaseModel):
+    current_password: str = Field(..., min_length=1, max_length=200)
+    new_password: str = Field(..., min_length=4, max_length=200)
+
+
+@router.patch("/password", status_code=204)
+def patch_password(
+    body: PasswordChange,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    if not verify_password(body.current_password, user.password_hash):
+        raise HTTPException(status_code=400, detail="current password incorrect")
+    if body.current_password == body.new_password:
+        raise HTTPException(status_code=400, detail="new password must differ from current")
+    user.password_hash = hash_password(body.new_password)
+    db.commit()

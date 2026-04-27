@@ -34,3 +34,47 @@ def test_logout_clears_cookie(client):
     client.post("/auth/login", json={"email": "a@b.com", "password": "pw1234"})
     r = client.post("/auth/logout")
     assert r.status_code == 204
+
+
+def test_change_password_then_login_with_new(client):
+    client.post("/auth/signup", json={"email": "p@p.com", "password": "old1234"})
+    client.post("/auth/login", json={"email": "p@p.com", "password": "old1234"})
+    r = client.patch(
+        "/auth/password",
+        json={"current_password": "old1234", "new_password": "new5678"},
+    )
+    assert r.status_code == 204
+
+    client.post("/auth/logout")
+    r = client.post("/auth/login", json={"email": "p@p.com", "password": "old1234"})
+    assert r.status_code == 401
+    r = client.post("/auth/login", json={"email": "p@p.com", "password": "new5678"})
+    assert r.status_code == 200
+
+
+def test_change_password_wrong_current_400(client):
+    client.post("/auth/signup", json={"email": "p@p.com", "password": "old1234"})
+    client.post("/auth/login", json={"email": "p@p.com", "password": "old1234"})
+    r = client.patch(
+        "/auth/password",
+        json={"current_password": "WRONG", "new_password": "new5678"},
+    )
+    assert r.status_code == 400
+
+
+def test_change_password_same_as_current_400(client):
+    client.post("/auth/signup", json={"email": "p@p.com", "password": "old1234"})
+    client.post("/auth/login", json={"email": "p@p.com", "password": "old1234"})
+    r = client.patch(
+        "/auth/password",
+        json={"current_password": "old1234", "new_password": "old1234"},
+    )
+    assert r.status_code == 400
+
+
+def test_change_password_requires_auth_401(client):
+    r = client.patch(
+        "/auth/password",
+        json={"current_password": "x", "new_password": "y1234"},
+    )
+    assert r.status_code == 401
