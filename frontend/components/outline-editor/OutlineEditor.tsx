@@ -166,6 +166,12 @@ export function OutlineEditor({ initial, onChange }: Props) {
           parentLevel={parentLevel}
           headingNumber={headingNumbers.get(b.id) ?? null}
           onSelect={handleSelect}
+          onChangeBlock={(next) => {
+            update({
+              ...outline,
+              blocks: outline.blocks.map((x) => (x.id === next.id ? next : x)),
+            });
+          }}
         />
       );
     }

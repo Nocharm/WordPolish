@@ -10,6 +10,7 @@ interface Props {
   parentLevel: number;
   headingNumber: string | null;
   onSelect: (id: string, mods: { shift: boolean; meta: boolean }) => void;
+  onChangeBlock?: (next: Block) => void;
 }
 
 // 들여쓰기 — 헤딩과 본문이 단계별로 같은 깊이를 공유.
@@ -58,6 +59,7 @@ export function ParagraphBlock({
   parentLevel,
   headingNumber,
   onSelect,
+  onChangeBlock,
 }: Props) {
   const t = useT();
   const isHeading = block.level >= 1;
@@ -73,6 +75,7 @@ export function ParagraphBlock({
       : "";
 
   const isNote = block.subtype === "note";
+  const hasSkip = block.warning === "heading_skip";
 
   function handleClick(e: React.MouseEvent) {
     onSelect(block.id, { shift: e.shiftKey, meta: e.metaKey || e.ctrlKey });
@@ -82,6 +85,7 @@ export function ParagraphBlock({
     <div
       role="button"
       aria-pressed={isSelected}
+      aria-label={block.text || t("paragraph.empty")}
       onClick={handleClick}
       className={clsx(
         indent,
@@ -90,6 +94,7 @@ export function ParagraphBlock({
         "group flex items-start gap-2 cursor-pointer rounded-r-token px-3 py-1.5 outline-none transition select-none",
         isHeading ? "text-text" : "font-normal text-text",
         isNote && "pl-6 italic border-l-2 border-warning/30",
+        hasSkip && "border-l-4 border-warning",
         isSelected && "ring-2 ring-inset ring-primary",
         heuristic && !isSelected && "ring-1 ring-inset ring-warning/60",
       )}
@@ -133,6 +138,19 @@ export function ParagraphBlock({
       <span className="flex-1 whitespace-pre-wrap break-words leading-snug">
         {block.text || <span className="italic text-text-muted">{t("paragraph.empty")}</span>}
       </span>
+
+      {hasSkip && onChangeBlock ? (
+        <button
+          type="button"
+          className="ml-2 shrink-0 self-center rounded-token border border-warning bg-warning/10 px-2 py-0.5 text-xs text-warning hover:bg-warning/20"
+          onClick={(e) => {
+            e.stopPropagation();
+            onChangeBlock({ ...block, level: Math.max(1, block.level - 1), warning: null });
+          }}
+        >
+          {t("editor.headingSkipQuickFix")}
+        </button>
+      ) : null}
     </div>
   );
 }
