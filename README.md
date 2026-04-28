@@ -1,4 +1,4 @@
-# Word Templator
+# WordPolish
 
 Word(.docx) 문서를 빌트인 템플릿(StyleSpec) 기준으로 표·문단·번호·폰트를 표준화해 다시 .docx로 출력하는 풀스택 웹 도구. 사용자 인증·히스토리·커스텀 템플릿·캡션 자동 번호·Word SEQ/REF 필드 emit 지원.
 
