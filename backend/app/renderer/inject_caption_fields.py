@@ -32,8 +32,8 @@ def build_caption_paragraph_xml(
 ) -> bytes:
     """캡션 paragraph 의 OOXML.
 
-    구조: `<w:p> [라벨] <bookmarkStart> [SEQ field] <bookmarkEnd> [tail] </w:p>`
-    fldChar 은 <w:r> 없이 paragraph 직계 자식으로 두어 XPath sibling 탐색을 단순화.
+    구조: `<w:p> [라벨 run] <bookmarkStart> [SEQ field runs] <bookmarkEnd> [tail run] </w:p>`
+    OOXML 스펙상 fldChar 는 반드시 <w:r> 안에 있어야 한다.
     """
     label_kind: LabelKind = (
         "figure" if seq_kind.lower().startswith("fig") else "table"
@@ -44,11 +44,11 @@ def build_caption_paragraph_xml(
         f'<w:p xmlns:w="{W_NS}">'
         f'<w:r><w:t xml:space="preserve">{_escape(label)} </w:t></w:r>'
         f'<w:bookmarkStart w:id="{bookmark_id}" w:name="{bm_name}"/>'
-        '<w:fldChar w:fldCharType="begin"/>'
+        '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
         f'<w:r><w:instrText xml:space="preserve">{instr}</w:instrText></w:r>'
-        '<w:fldChar w:fldCharType="separate"/>'
+        '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
         f"<w:r><w:t>{cached_number}</w:t></w:r>"
-        '<w:fldChar w:fldCharType="end"/>'
+        '<w:r><w:fldChar w:fldCharType="end"/></w:r>'
         f'<w:bookmarkEnd w:id="{bookmark_id}"/>'
         f'<w:r><w:t xml:space="preserve">{_escape(tail_text)}</w:t></w:r>'
         "</w:p>"
@@ -71,9 +71,9 @@ def build_ref_run_xml(
     w = f'xmlns:w="{W_NS}"'
     return (
         f'<w:r {w}><w:t xml:space="preserve">{_escape(prefix_text)}</w:t></w:r>'
-        f'<w:fldChar {w} w:fldCharType="begin"/>'
+        f'<w:r {w}><w:fldChar w:fldCharType="begin"/></w:r>'
         f'<w:r {w}><w:instrText xml:space="preserve">{instr}</w:instrText></w:r>'
-        f'<w:fldChar {w} w:fldCharType="separate"/>'
+        f'<w:r {w}><w:fldChar w:fldCharType="separate"/></w:r>'
         f'<w:r {w}><w:t>{cached_number}</w:t></w:r>'
-        f'<w:fldChar {w} w:fldCharType="end"/>'
+        f'<w:r {w}><w:fldChar w:fldCharType="end"/></w:r>'
     ).encode()

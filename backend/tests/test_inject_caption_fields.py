@@ -11,7 +11,7 @@ from app.renderer.inject_caption_fields import (
 W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 NS = {"w": W_NS}
 SEP_XPATH = (
-    "//w:fldChar[@w:fldCharType='separate']"
+    "//w:r[w:fldChar[@w:fldCharType='separate']]"
     "/following-sibling::w:r[1]/w:t/text()"
 )
 
