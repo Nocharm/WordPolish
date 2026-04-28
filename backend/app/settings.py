@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     max_batch_parallel: int = Field(4, alias="MAX_BATCH_PARALLEL")
     # 콤마 구분 이메일 목록 — signup 시 자동 admin 권한 부여.
     admin_emails: str = Field("", alias="ADMIN_EMAILS")
+    # 인증 공급자 — "local" 만 구현. 사내 SSO/OIDC 도입 시 분기 추가.
+    auth_provider: str = Field("local", alias="AUTH_PROVIDER")
 
     @property
     def cors_origin_list(self) -> list[str]:
