@@ -174,3 +174,41 @@ def test_outline_level_takes_precedence_over_heuristic():
     level, by = detect_level(_Para(), paragraph_index=10)
     assert level == 2
     assert by == "outline_level"
+
+
+def test_based_on_chain_resolves_to_heading_level():
+    """사용자 정의 스타일이 Heading 1 을 base 로 가지면 level 1."""
+    from app.parser.detect_heading import detect_level
+
+    class _Heading1:
+        name = "Heading 1"
+        base_style = None
+
+    class _CompanyHeading:
+        name = "회사_제목스타일"  # alias dict 에 없음
+        base_style = _Heading1()
+
+    class _PF:
+        alignment = None
+
+    class _Para:
+        style = _CompanyHeading()
+        text = "큰 제목"
+        runs = []
+        paragraph_format = _PF()
+
+    level, by = detect_level(_Para(), paragraph_index=2)
+    assert level == 1
+    assert by == "based_on"
+
+
+def test_based_on_chain_handles_cycle():
+    """무한 루프 방지 — 같은 객체 재방문 시 None."""
+    from app.parser.detect_heading import _resolve_via_based_on
+
+    class _Cyclic:
+        name = "weird"
+
+    a = _Cyclic()
+    a.base_style = a  # self-cycle
+    assert _resolve_via_based_on(a) is None

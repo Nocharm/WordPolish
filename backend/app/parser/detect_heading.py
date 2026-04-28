@@ -6,7 +6,7 @@
 import re
 from typing import Any, Literal
 
-DetectedBy = Literal["word_style", "outline_level", "heuristic"]
+DetectedBy = Literal["word_style", "outline_level", "based_on", "heuristic"]
 
 _WORD_HEADING = {
     "Heading 1": 1,
@@ -118,6 +118,22 @@ def _resolve_outline_level(paragraph: Any) -> int | None:
         return None
 
 
+def _resolve_via_based_on(style: Any) -> int | None:
+    """style.base_style 체인을 따라가며 _WORD_HEADING 매칭 시도.
+
+    무한 루프 방지: 방문 객체 id 기록.
+    """
+    seen: set[int] = set()
+    cur = getattr(style, "base_style", None)
+    while cur is not None and id(cur) not in seen:
+        seen.add(id(cur))
+        name = getattr(cur, "name", "")
+        if name in _WORD_HEADING:
+            return _WORD_HEADING[name]
+        cur = getattr(cur, "base_style", None)
+    return None
+
+
 def detect_level(paragraph: Any, *, paragraph_index: int | None = None) -> tuple[int, DetectedBy]:
     # (a) Word 빌트인 스타일
     style_name = getattr(paragraph.style, "name", "")
@@ -128,6 +144,11 @@ def detect_level(paragraph: Any, *, paragraph_index: int | None = None) -> tuple
     olvl = _resolve_outline_level(paragraph)
     if olvl is not None and 1 <= olvl <= 5:
         return olvl, "outline_level"
+
+    # (a3) basedOn 체인 — 사용자 정의 스타일이 Heading N 상속
+    via_base = _resolve_via_based_on(paragraph.style)
+    if via_base is not None:
+        return via_base, "based_on"
 
     text = (paragraph.text or "").strip()
 
