@@ -57,11 +57,13 @@ def db_engine():
 
     yield engine
 
-    _db_session_module.engine = _orig_engine
-    _db_session_module.SessionLocal = _orig_session_local
-    _app_main_module.SessionLocal = _orig_main_session_local
-    Base.metadata.drop_all(engine)
-    engine.dispose()
+    try:
+        Base.metadata.drop_all(engine)
+        engine.dispose()
+    finally:
+        _db_session_module.engine = _orig_engine
+        _db_session_module.SessionLocal = _orig_session_local
+        _app_main_module.SessionLocal = _orig_main_session_local
 
 
 @pytest.fixture
