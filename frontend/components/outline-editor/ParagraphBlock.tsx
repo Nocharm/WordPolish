@@ -131,7 +131,7 @@ export function ParagraphBlock({
           }
           className="shrink-0 inline-flex items-center self-center rounded bg-surface-elevated px-1.5 py-0.5 text-[10px] font-medium text-text-muted"
         >
-          📎{block.field_kind === "unknown" ? " ?" : ""}
+          📎
         </span>
       ) : null}
 

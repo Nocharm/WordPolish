@@ -229,7 +229,8 @@ export function OutlineEditor({ initial, onChange }: Props) {
     (b) => b.kind === "paragraph" && b.raw_xml_ref,
   );
   const preservedTotal = preserved.length;
-  const reviewable = preserved.filter((b) => b.field_kind === "unknown").length;
+  // field_kind 가 분류되지 않은(null) 보존 단락 — 백엔드는 unknown → None 으로 정규화
+  const reviewable = preserved.filter((b) => b.field_kind == null).length;
 
   return (
     <div className="space-y-2">

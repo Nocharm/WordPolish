@@ -24,7 +24,7 @@ export interface Block {
   caption?: string | null;
   raw_ref?: string | null;
   raw_xml_ref?: string | null;
-  field_kind?: "toc" | "ref" | "pageref" | "unknown" | null;
+  field_kind?: "toc" | "ref" | "pageref" | null;
   preview_text?: string | null;
   subtype?: "body" | "note" | null;
   warning?: "heading_skip" | null;
