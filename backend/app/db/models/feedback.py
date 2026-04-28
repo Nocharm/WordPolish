@@ -5,10 +5,10 @@ from datetime import datetime
 from typing import Literal
 
 from sqlalchemy import DateTime, ForeignKey, String, Text, func
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+from app.db.types import GUID
 
 FeedbackCategory = Literal["bug", "feature", "other"]
 FeedbackStatus = Literal["open", "in_progress", "closed"]
@@ -17,9 +17,9 @@ FeedbackStatus = Literal["open", "in_progress", "closed"]
 class Feedback(Base):
     __tablename__ = "feedbacks"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     category: Mapped[str] = mapped_column(String(16), nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
