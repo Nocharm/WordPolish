@@ -43,14 +43,15 @@ docker compose -f infra/docker-compose.yml up -d --build
 ## 개발
 
 ```bash
-# Backend (Python 3.11)
+# Backend (Python 3.11) — 루트 .env 를 자동 인식 (../.env / .env 다중 경로)
 cd backend
 python3.11 -m venv .venv && . .venv/bin/activate
 uv pip install -r requirements-dev.txt        # fallback: pip install -r requirements-dev.txt
 uvicorn app.main:app --reload --port 8000
 
-# Frontend (Next.js 15 + React 19)
+# Frontend (Next.js 15 + React 19) — 백엔드를 :8000 로 직접 호출하려면 frontend/.env.local 작성
 cd frontend
+echo 'NEXT_PUBLIC_API_BASE=http://localhost:8000' > .env.local   # nginx 프록시 미사용 시
 npm install --legacy-peer-deps
 npm run dev                                    # http://localhost:3000
 ```
