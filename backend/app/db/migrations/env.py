@@ -18,10 +18,16 @@ config.set_main_option("sqlalchemy.url", get_settings().database_url)
 
 
 def run_migrations_offline() -> None:
+    url = config.get_main_option("sqlalchemy.url") or ""
+    is_sqlite = url.startswith("sqlite")
+    # NOTE: offline (--sql) + SQLite + batch_alter_table requires copy_from=Table()
+    # in the migration files. We don't ship offline mode in our deploy path
+    # (entrypoint runs alembic online), so this remains intentionally limited.
     context.configure(
-        url=config.get_main_option("sqlalchemy.url"),
+        url=url,
         target_metadata=target_metadata,
         literal_binds=True,
+        render_as_batch=is_sqlite,
     )
     with context.begin_transaction():
         context.run_migrations()
