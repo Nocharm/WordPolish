@@ -10,7 +10,8 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
+
+from app.db.types import JSONPortable
 
 revision: str = "0002_original_outline"
 down_revision: str | None = "0001_initial"
@@ -21,11 +22,7 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     op.add_column(
         "jobs",
-        sa.Column(
-            "original_outline_json",
-            postgresql.JSONB(astext_type=sa.Text()),
-            nullable=True,
-        ),
+        sa.Column("original_outline_json", JSONPortable(), nullable=True),
     )
 
 

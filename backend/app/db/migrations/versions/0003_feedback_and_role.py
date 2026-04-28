@@ -11,6 +11,8 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
+from app.db.types import GUID
+
 revision: str = "0003_feedback_and_role"
 down_revision: str | None = "0002_original_outline"
 branch_labels: str | Sequence[str] | None = None
@@ -18,18 +20,19 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "users",
-        sa.Column("role", sa.String(length=16), nullable=False, server_default="user"),
-    )
-    op.create_check_constraint(
-        "ck_users_role", "users", "role IN ('user', 'admin')"
-    )
+    # batch_alter_table handles both PG (passthrough) and SQLite (copy-move)
+    with op.batch_alter_table("users") as batch_op:
+        batch_op.add_column(
+            sa.Column("role", sa.String(length=16), nullable=False, server_default="user"),
+        )
+        batch_op.create_check_constraint(
+            "ck_users_role", "role IN ('user', 'admin')"
+        )
 
     op.create_table(
         "feedbacks",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("id", GUID(), nullable=False),
+        sa.Column("user_id", GUID(), nullable=False),
         sa.Column("category", sa.String(length=16), nullable=False),
         sa.Column("title", sa.String(length=200), nullable=False),
         sa.Column("body", sa.Text(), nullable=False),
@@ -38,13 +41,13 @@ def upgrade() -> None:
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
         sa.Column(
             "updated_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
@@ -64,5 +67,6 @@ def downgrade() -> None:
     op.drop_index("ix_feedbacks_created_at", table_name="feedbacks")
     op.drop_index("ix_feedbacks_user_id", table_name="feedbacks")
     op.drop_table("feedbacks")
-    op.drop_constraint("ck_users_role", "users", type_="check")
-    op.drop_column("users", "role")
+    with op.batch_alter_table("users") as batch_op:
+        batch_op.drop_constraint("ck_users_role", type_="check")
+        batch_op.drop_column("role")
